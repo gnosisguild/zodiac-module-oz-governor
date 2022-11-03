@@ -22,6 +22,7 @@ const setup = async () => {
     avatar.address,
     avatar.address,
     AddressOne,
+    AddressOne,
     "Test Governor",
     1,
     60,

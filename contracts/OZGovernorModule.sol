@@ -23,6 +23,7 @@ contract OZGovernorModule is
         address _owner,
         address _avatar,
         address _target,
+        address _multisend,
         address _token,
         string memory _name,
         uint256 _votingDelay,
@@ -34,6 +35,7 @@ contract OZGovernorModule is
             _owner,
             _avatar,
             _target,
+            _multisend,
             _token,
             _name,
             _votingDelay,
@@ -52,6 +54,7 @@ contract OZGovernorModule is
             address _owner,
             address _avatar,
             address _target,
+            address _multisend,
             address _token,
             string memory _name,
             uint256 _votingDelay,
@@ -60,11 +63,12 @@ contract OZGovernorModule is
             uint256 _quorum
         ) = abi.decode(
                 initializeParams,
-                (address, address, address, address, string, uint256, uint256, uint256, uint256)
+                (address, address, address, address, address, string, uint256, uint256, uint256, uint256)
             );
 
         setAvatar(_avatar);
         setTarget(_target);
+        setMultisend(_multisend);
         __Governor_init(_name);
         __GovernorSettings_init(_votingDelay, _votingPeriod, _proposalThreshold);
         __GovernorCountingSimple_init();
@@ -88,6 +92,10 @@ contract OZGovernorModule is
             calldatas
         );
         exec(to, value, data, operation);
+    }
+
+    function setMultisend(address _multisend) public onlyOwner{
+        multisend = _multisend;
     }
 
     // The following functions are overrides required by Solidity.
