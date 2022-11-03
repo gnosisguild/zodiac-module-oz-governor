@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.9;
 
-import "@gnosis.pm/zodiac/contracts/core/Module.sol";
+import "@gnosis.pm/zodiac/contracts/factory/FactoryFriendly.sol";
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 
-contract OZGovernorModule is Module, GovernorUpgradeable, GovernorSettingsUpgradeable, GovernorCountingSimpleUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable {
-        constructor(address _owner, address _avatar, address _target, address _token, string memory _name, uint256 _votingDelay, uint256 _votingPeriod, uint256 _proposalThreshold, uint256 _quorum) {
-        bytes memory initializeParams = abi.encode(_owner, _avatar, _target, _token, _name, _votingDelay, _votingPeriod, _proposalThreshold, _quorum);
+contract OZGovernorModule is FactoryFriendly, GovernorUpgradeable, GovernorSettingsUpgradeable, GovernorCountingSimpleUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable {
+        constructor(address _owner, address _token, string memory _name, uint256 _votingDelay, uint256 _votingPeriod, uint256 _proposalThreshold, uint256 _quorum) {
+        bytes memory initializeParams = abi.encode(_owner, _token, _name, _votingDelay, _votingPeriod, _proposalThreshold, _quorum);
         setUp(initializeParams);
     }
 
@@ -18,10 +18,7 @@ contract OZGovernorModule is Module, GovernorUpgradeable, GovernorSettingsUpgrad
     /// @param initializeParams Parameters of initialization encoded
     function setUp(bytes memory initializeParams) public override initializer {
         __Ownable_init();
-        (address _owner, address _avatar, address _target, address _token, string memory _name, uint256 _votingDelay, uint256 _votingPeriod, uint256 _proposalThreshold, uint256 _quorum) = abi.decode(initializeParams, (address, address, address, address, string, uint256, uint256, uint256, uint256));
-
-        setAvatar(_avatar);
-        setTarget(_target);
+        (address _owner, address _token, string memory _name, uint256 _votingDelay, uint256 _votingPeriod, uint256 _proposalThreshold, uint256 _quorum) = abi.decode(initializeParams, (address, address, string, uint256, uint256, uint256, uint256));
         __Governor_init(_name);
         __GovernorSettings_init(_votingDelay, _votingPeriod, _proposalThreshold);
         __GovernorCountingSimple_init();

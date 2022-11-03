@@ -13,8 +13,6 @@ const setup = async () => {
   const OZGovernorModuleFactory = await ethers.getContractFactory("OZGovernorModule")
   const ozGovernorModule = await OZGovernorModuleFactory.deploy(
     testSigner.address,
-    avatar.address,
-    avatar.address,
     AddressOne,
     "Test Governor",
     1,
@@ -22,22 +20,14 @@ const setup = async () => {
     0,
     1,
   )
-  // const OZGovernorModuleDeployment = await deployments.get("OZGovernorModule")
-  // const OZGovernorModuleContract = await ethers.getContractAt(
-  //   "OZGovernorModule",
-  //   OZGovernorModuleDeployment.address,
-  //   testSigner,
-  // )
   return { avatar, ozGovernorModule, testSigner }
 }
 
 describe("OZGovernorModule", function () {
   describe("Constructor", function () {
     it("Successfully deploys contract and sets variables", async function () {
-      const { avatar, ozGovernorModule, testSigner } = await setup()
+      const { ozGovernorModule, testSigner } = await setup()
       expect(await ozGovernorModule.owner()).to.equal(testSigner.address)
-      expect(await ozGovernorModule.avatar()).to.equal(avatar.address)
-      expect(await ozGovernorModule.target()).to.equal(avatar.address)
       expect(await ozGovernorModule.token()).to.equal(AddressOne)
       expect(await ozGovernorModule.name()).to.equal("Test Governor")
       expect(await ozGovernorModule.votingDelay()).to.equal(1)
