@@ -9,9 +9,38 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCounti
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 
-contract OZGovernorModule is Module, MultisendEncoder, GovernorUpgradeable, GovernorSettingsUpgradeable, GovernorCountingSimpleUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable {
-    constructor(address _owner, address _avatar, address _target, address _token, string memory _name, uint256 _votingDelay, uint256 _votingPeriod, uint256 _proposalThreshold, uint256 _quorum) {
-        bytes memory initializeParams = abi.encode(_owner, _avatar, _target, _token, _name, _votingDelay, _votingPeriod, _proposalThreshold, _quorum);
+contract OZGovernorModule is
+    Module,
+    GovernorUpgradeable,
+    GovernorSettingsUpgradeable,
+    GovernorCountingSimpleUpgradeable,
+    GovernorVotesUpgradeable,
+    GovernorVotesQuorumFractionUpgradeable
+{
+    // address private multisend;
+
+    constructor(
+        address _owner,
+        address _avatar,
+        address _target,
+        address _token,
+        string memory _name,
+        uint256 _votingDelay,
+        uint256 _votingPeriod,
+        uint256 _proposalThreshold,
+        uint256 _quorum
+    ) {
+        bytes memory initializeParams = abi.encode(
+            _owner,
+            _avatar,
+            _target,
+            _token,
+            _name,
+            _votingDelay,
+            _votingPeriod,
+            _proposalThreshold,
+            _quorum
+        );
         setUp(initializeParams);
     }
 
@@ -19,7 +48,20 @@ contract OZGovernorModule is Module, MultisendEncoder, GovernorUpgradeable, Gove
     /// @param initializeParams Parameters of initialization encoded
     function setUp(bytes memory initializeParams) public override initializer {
         __Ownable_init();
-        (address _owner, address _avatar, address _target, address _token, string memory _name, uint256 _votingDelay, uint256 _votingPeriod, uint256 _proposalThreshold, uint256 _quorum) = abi.decode(initializeParams, (address, address, address, address, string, uint256, uint256, uint256, uint256));
+        (
+            address _owner,
+            address _avatar,
+            address _target,
+            address _token,
+            string memory _name,
+            uint256 _votingDelay,
+            uint256 _votingPeriod,
+            uint256 _proposalThreshold,
+            uint256 _quorum
+        ) = abi.decode(
+                initializeParams,
+                (address, address, address, address, string, uint256, uint256, uint256, uint256)
+            );
 
         setAvatar(_avatar);
         setTarget(_target);
@@ -39,47 +81,33 @@ contract OZGovernorModule is Module, MultisendEncoder, GovernorUpgradeable, Gove
         bytes[] memory calldatas,
         bytes32 /*descriptionHash*/
     ) internal override {
-        string memory errorMessage = "Governor: call reverted without message";
-        require(targets.length == values.length && values.length == calldatas.length, "arrays are not equal length");
-        Transaction[] memory transactions;
-        for(uint8 i = 0; i < targets.length; i++){
-            transactions[i].to = targets[i];
-            transactions[i].value = values[i];
-            transactions[i].data = calldatas[i];
-            transactions[i].operation = Enum.Operation.Call;
-        }
-        (address to, uint256 value, bytes memory data, Enum.Operation operation) = encodeMultisend(transactions);
+        (address to, uint256 value, bytes memory data, Enum.Operation operation) = MultisendEncoder.encodeMultisend(
+            // multisend,
+            targets,
+            values,
+            calldatas
+        );
         exec(to, value, data, operation);
     }
 
     // The following functions are overrides required by Solidity.
 
-    function votingDelay()
-        public
-        view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
-        returns (uint256)
-    {
-        return super.votingDelay();
-    }
+    // function votingDelay() public view override(IGovernorUpgradeable, GovernorSettingsUpgradeable) returns (uint256) {
+    //     return super.votingDelay();
+    // }
 
-    function votingPeriod()
-        public
-        view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
-        returns (uint256)
-    {
-        return super.votingPeriod();
-    }
+    // function votingPeriod() public view override(IGovernorUpgradeable, GovernorSettingsUpgradeable) returns (uint256) {
+    //     return super.votingPeriod();
+    // }
 
-    function quorum(uint256 blockNumber)
-        public
-        view
-        override(IGovernorUpgradeable, GovernorVotesQuorumFractionUpgradeable)
-        returns (uint256)
-    {
-        return super.quorum(blockNumber);
-    }
+    // function quorum(uint256 blockNumber)
+    //     public
+    //     view
+    //     override(IGovernorUpgradeable, GovernorVotesQuorumFractionUpgradeable)
+    //     returns (uint256)
+    // {
+    //     return super.quorum(blockNumber);
+    // }
 
     function proposalThreshold()
         public

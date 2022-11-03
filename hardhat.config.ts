@@ -7,11 +7,20 @@ import "@typechain/hardhat"
 import "hardhat-gas-reporter"
 import "solidity-coverage"
 import "hardhat-deploy"
+import "hardhat-contract-sizer"
 
 dotenv.config()
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.9",
+  solidity: {
+    compilers: [{ version: "0.8.9" }],
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1,
+      },
+    },
+  },
   networks: {
     goerli: {
       url: process.env.GOERLI_URL || "",

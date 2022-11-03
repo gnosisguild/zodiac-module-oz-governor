@@ -10,7 +10,13 @@ const setup = async () => {
   const testSigner = await ethers.getSigner(tester)
   const Avatar = await ethers.getContractFactory("TestAvatar")
   const avatar = await Avatar.deploy()
-  const OZGovernorModuleFactory = await ethers.getContractFactory("OZGovernorModule")
+  const MultisendEncoder = await ethers.getContractFactory("MultisendEncoder")
+  const multisendEncoder = await MultisendEncoder.deploy()
+  const OZGovernorModuleFactory = await ethers.getContractFactory("OZGovernorModule", {
+    libraries: {
+      MultisendEncoder: multisendEncoder.address,
+    },
+  })
   const ozGovernorModule = await OZGovernorModuleFactory.deploy(
     testSigner.address,
     avatar.address,

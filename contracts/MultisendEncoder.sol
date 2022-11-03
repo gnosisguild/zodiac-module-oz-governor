@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.6;
 
-import "./Transaction.sol";
+import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-abstract contract MultisendEncoder {
-    address internal multisend;
+library MultisendEncoder {
+    error NoTransactions();
+    error UnequalArraysProvided();
 
-    function encodeMultisend(Transaction[] memory txs)
+    function encodeMultisend(
+        // address multisend,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas
+    )
         public
-        view
+        pure
         returns (
             address to,
             uint256 value,
@@ -16,33 +22,36 @@ abstract contract MultisendEncoder {
             Enum.Operation operation
         )
     {
-        require(
-            txs.length > 0,
-            "No transactions provided for multisend encode"
-        );
+        if (targets.length == 0) {
+            revert NoTransactions();
+        }
+        if (targets.length != values.length || values.length != calldatas.length) {
+            revert UnequalArraysProvided();
+        }
 
-        if (txs.length > 1) {
+        if (targets.length > 1) {
+            address multisend = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
             to = multisend;
             value = 0;
             data = hex"";
-            for (uint256 i; i < txs.length; i++) {
+            for (uint256 i; i < targets.length; i++) {
                 data = abi.encodePacked(
                     data,
                     abi.encodePacked(
-                        uint8(txs[i].operation),
-                        txs[i].to,
-                        txs[i].value,
-                        uint256(txs[i].data.length),
-                        txs[i].operation
+                        uint8(Enum.Operation.Call), /// operation as an uint8.
+                        targets[i], /// to as an address.
+                        values[i], /// value as an uint256.
+                        uint256(calldatas[i].length), /// data length as an uint256.
+                        calldatas[i] /// data as bytes.
                     )
                 );
             }
-            operation = Enum.Operation.Call;
+            operation = Enum.Operation.DelegateCall;
         } else {
-            to = txs[0].to;
-            value = txs[0].value;
-            data = txs[0].data;
-            operation = txs[0].operation;
+            to = targets[0];
+            value = values[0];
+            data = calldatas[0];
+            operation = Enum.Operation.Call;
         }
     }
 }
