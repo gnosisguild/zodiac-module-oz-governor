@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesU
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract MyGovernor is Module, GovernorUpgradeable, GovernorSettingsUpgradeable, GovernorCountingSimpleUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable {
+contract OZGovernorModule is Module, GovernorUpgradeable, GovernorSettingsUpgradeable, GovernorCountingSimpleUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable {
         constructor(address _owner, address _avatar, address _target, address _token, string memory _name, uint256 _votingDelay, uint256 _votingPeriod, uint256 _proposalThreshold, uint256 _quorum) {
         // _disableInitializers();
         bytes memory initializeParams = abi.encode(_owner, _avatar, _target, _token, _name, _votingDelay, _votingPeriod, _proposalThreshold, _quorum);
