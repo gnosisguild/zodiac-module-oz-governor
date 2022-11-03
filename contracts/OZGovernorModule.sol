@@ -94,28 +94,11 @@ contract OZGovernorModule is
         exec(to, value, data, operation);
     }
 
-    function setMultisend(address _multisend) public onlyOwner{
+    function setMultisend(address _multisend) public onlyOwner {
         multisend = _multisend;
     }
 
     // The following functions are overrides required by Solidity.
-
-    // function votingDelay() public view override(IGovernorUpgradeable, GovernorSettingsUpgradeable) returns (uint256) {
-    //     return super.votingDelay();
-    // }
-
-    // function votingPeriod() public view override(IGovernorUpgradeable, GovernorSettingsUpgradeable) returns (uint256) {
-    //     return super.votingPeriod();
-    // }
-
-    // function quorum(uint256 blockNumber)
-    //     public
-    //     view
-    //     override(IGovernorUpgradeable, GovernorVotesQuorumFractionUpgradeable)
-    //     returns (uint256)
-    // {
-    //     return super.quorum(blockNumber);
-    // }
 
     function proposalThreshold()
         public
