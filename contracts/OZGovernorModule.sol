@@ -17,7 +17,7 @@ contract OZGovernorModule is
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable
 {
-    // address private multisend;
+    address private multisend;
 
     constructor(
         address _owner,
@@ -82,7 +82,7 @@ contract OZGovernorModule is
         bytes32 /*descriptionHash*/
     ) internal override {
         (address to, uint256 value, bytes memory data, Enum.Operation operation) = MultisendEncoder.encodeMultisend(
-            // multisend,
+            multisend,
             targets,
             values,
             calldatas

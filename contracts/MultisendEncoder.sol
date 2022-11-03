@@ -8,7 +8,7 @@ library MultisendEncoder {
     error UnequalArraysProvided();
 
     function encodeMultisend(
-        // address multisend,
+        address multisend,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas
@@ -30,7 +30,6 @@ library MultisendEncoder {
         }
 
         if (targets.length > 1) {
-            address multisend = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
             to = multisend;
             value = 0;
             data = hex"";
