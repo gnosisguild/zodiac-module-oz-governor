@@ -28,13 +28,21 @@ const setup = async () => {
   //   OZGovernorModuleDeployment.address,
   //   testSigner,
   // )
-  return { ozGovernorModule, testSigner }
+  return { avatar, ozGovernorModule, testSigner }
 }
 
 describe("OZGovernorModule", function () {
   describe("Constructor", function () {
-    it("Successfully deploys contract", async function () {
-      expect(await setup())
+    it("Successfully deploys contract and sets variables", async function () {
+      const { avatar, ozGovernorModule, testSigner } = await setup()
+      expect(await ozGovernorModule.owner()).to.equal(testSigner.address)
+      expect(await ozGovernorModule.avatar()).to.equal(avatar.address)
+      expect(await ozGovernorModule.target()).to.equal(avatar.address)
+      expect(await ozGovernorModule.token()).to.equal(AddressOne)
+      expect(await ozGovernorModule.name()).to.equal("Test Governor")
+      expect(await ozGovernorModule.votingDelay()).to.equal(1)
+      expect(await ozGovernorModule.votingPeriod()).to.equal(60)
+      expect(await ozGovernorModule.proposalThreshold()).to.equal(0)
     })
   })
 })
