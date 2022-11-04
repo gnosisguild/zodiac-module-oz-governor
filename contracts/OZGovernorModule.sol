@@ -90,7 +90,7 @@ contract OZGovernorModule is
             values,
             calldatas
         );
-                bool success = IAvatar(target).execTransactionFromModule(
+            bool success = IAvatar(target).execTransactionFromModule(
             to,
             value,
             data,

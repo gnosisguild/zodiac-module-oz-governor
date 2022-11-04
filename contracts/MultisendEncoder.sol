@@ -2,6 +2,7 @@
 pragma solidity ^0.8.6;
 
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+import "@gnosis.pm/safe-contracts/contracts/libraries/MultiSend.sol";
 
 library MultisendEncoder {
     error NoTransactions();
