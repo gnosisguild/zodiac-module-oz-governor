@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.9;
 
-import "@gnosis.pm/zodiac/contracts/core/Module.sol";
+import "@gnosis.pm/zodiac/contracts/factory/FactoryFriendly.sol";
+import "@gnosis.pm/zodiac/contracts/interfaces/IAvatar.sol";
 import "./MultisendEncoder.sol";
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
@@ -10,20 +11,22 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesU
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 
 contract OZGovernorModule is
-    Module,
+    FactoryFriendly,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable
 {
-    address private multisend;
+    error TransactionsFailed();
+
+    address public multisend;
+    address public target;
 
     constructor(
         address _owner,
-        address _avatar,
-        address _target,
         address _multisend,
+        address _target,
         address _token,
         string memory _name,
         uint256 _votingDelay,
@@ -33,9 +36,8 @@ contract OZGovernorModule is
     ) {
         bytes memory initializeParams = abi.encode(
             _owner,
-            _avatar,
-            _target,
             _multisend,
+            _target,
             _token,
             _name,
             _votingDelay,
@@ -52,9 +54,8 @@ contract OZGovernorModule is
         __Ownable_init();
         (
             address _owner,
-            address _avatar,
-            address _target,
             address _multisend,
+            address _target,
             address _token,
             string memory _name,
             uint256 _votingDelay,
@@ -63,12 +64,10 @@ contract OZGovernorModule is
             uint256 _quorum
         ) = abi.decode(
                 initializeParams,
-                (address, address, address, address, address, string, uint256, uint256, uint256, uint256)
+                (address, address, address, address, string, uint256, uint256, uint256, uint256)
             );
-
-        setAvatar(_avatar);
-        setTarget(_target);
         setMultisend(_multisend);
+        setTarget(_target);
         __Governor_init(_name);
         __GovernorSettings_init(_votingDelay, _votingPeriod, _proposalThreshold);
         __GovernorCountingSimple_init();
@@ -91,11 +90,23 @@ contract OZGovernorModule is
             values,
             calldatas
         );
-        exec(to, value, data, operation);
+                bool success = IAvatar(target).execTransactionFromModule(
+            to,
+            value,
+            data,
+            operation
+        );
+        if (!success) {
+            revert TransactionsFailed();
+        }
     }
 
     function setMultisend(address _multisend) public onlyOwner {
         multisend = _multisend;
+    }
+
+    function setTarget(address _target) public onlyOwner {
+        target = _target;
     }
 
     // The following functions are overrides required by Solidity.

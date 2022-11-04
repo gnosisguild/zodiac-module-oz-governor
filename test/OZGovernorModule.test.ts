@@ -19,9 +19,8 @@ const setup = async () => {
   })
   const ozGovernorModule = await OZGovernorModuleFactory.deploy(
     testSigner.address,
-    avatar.address,
-    avatar.address,
     AddressOne,
+    avatar.address,
     AddressOne,
     "Test Governor",
     1,
@@ -38,7 +37,7 @@ describe("OZGovernorModule", function () {
     it("Successfully deploys contract and sets variables", async function () {
       const { avatar, ozGovernorModule, testSigner } = await setup()
       expect(await ozGovernorModule.owner()).to.equal(testSigner.address)
-      expect(await ozGovernorModule.avatar()).to.equal(avatar.address)
+      expect(await ozGovernorModule.multisend()).to.equal(AddressOne)
       expect(await ozGovernorModule.target()).to.equal(avatar.address)
       expect(await ozGovernorModule.token()).to.equal(AddressOne)
       expect(await ozGovernorModule.name()).to.equal("Test Governor")
