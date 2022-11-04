@@ -6,7 +6,7 @@ import "@gnosis.pm/safe-contracts/contracts/libraries/MultiSend.sol";
 
 library MultisendEncoder {
     error NoTransactions();
-    error UnequalArraysProvided();
+    error UnequalArraysLengths();
 
     function encodeMultisend(
         address multisend,
@@ -27,7 +27,7 @@ library MultisendEncoder {
             revert NoTransactions();
         }
         if (targets.length != values.length || values.length != calldatas.length) {
-            revert UnequalArraysProvided();
+            revert UnequalArraysLengths();
         }
 
         if (targets.length > 1) {
