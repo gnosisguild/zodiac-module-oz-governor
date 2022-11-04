@@ -18,6 +18,12 @@ contract OZGovernorModule is
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable
 {
+    /// @dev Emitted each time the multisend address is set.
+    event MultisendSet(address indexed multisend);
+    /// @dev Emitted each time the Target is set.
+    event TargetSet(address indexed previousTarget, address indexed newTarget);
+
+    /// @dev Transaction execution failed.
     error TransactionsFailed();
 
     address public multisend;
@@ -103,9 +109,11 @@ contract OZGovernorModule is
 
     function setMultisend(address _multisend) public onlyOwner {
         multisend = _multisend;
+        emit MultisendSet(_multisend);
     }
 
     function setTarget(address _target) public onlyOwner {
+        emit TargetSet(target, _target);
         target = _target;
     }
 
