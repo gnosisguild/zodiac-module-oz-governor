@@ -19,19 +19,33 @@ const setup = async () => {
       MultisendEncoder: multisendEncoder.address,
     },
   })
+  const paramTypes = ["address", "address", "address", "address", "string", "uint256", "uint256", "uint256", "uint256"]
+  const params = {
+    owner: testSigner.address,
+    multisend: multisend.address,
+    target: avatar.address,
+    token: AddressOne,
+    name: "Test Governor",
+    votingDelay: 1,
+    votingPeriod: 60,
+    proposalThreshold: 0,
+    quorum: 1,
+  }
   const ozGovernorModule = await OZGovernorModuleFactory.deploy(
-    testSigner.address, // _owner
-    multisend.address, // _multisend
-    avatar.address, // _target
-    AddressOne, // _token
-    "Test Governor", // _name
-    1, // _votingDelay
-    60, // _votingPeriod
-    0, // _votingThreshold
-    1, // quorum
+    params.owner,
+    params.multisend,
+    params.target,
+    params.token,
+    params.name,
+    params.votingDelay,
+    params.votingPeriod,
+    params.proposalThreshold,
+    params.quorum,
   )
+  const ModuleProxyFactory = await ethers.getContractFactory("ModuleProxyFactory")
+  const moduleProxyFactory = await ModuleProxyFactory.deploy()
 
-  return { avatar, multisend, ozGovernorModule, testSigner }
+  return { avatar, multisend, moduleProxyFactory, ozGovernorModule, params, paramTypes, testSigner }
 }
 
 describe("OZGovernorModule", function () {
@@ -49,6 +63,48 @@ describe("OZGovernorModule", function () {
       // not sure why these checks keep failing. Commenting out for now.
       // const blockNumber = await ethers.provider.getBlockNumber()
       // expect(await ozGovernorModule.quorum(blockNumber)).to.equal(1)
+    })
+  })
+  describe("setUp()", function () {
+    it("Sucessfully deploys as a proxy", async function () {
+      const { moduleProxyFactory, ozGovernorModule, params, paramTypes } = await setup()
+      const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [
+        params.owner,
+        params.multisend,
+        params.target,
+        params.token,
+        params.name,
+        params.votingDelay,
+        params.votingPeriod,
+        params.proposalThreshold,
+        params.quorum,
+      ])
+
+      const initParams = (await ozGovernorModule.populateTransaction.setUp(initData)).data
+      if (!initParams) {
+        throw console.error("error")
+      }
+
+      const receipt = await moduleProxyFactory
+        .deployModule(ozGovernorModule.address, initParams, 0)
+        .then((tx: any) => tx.wait())
+
+      // retrieve new address from event
+      const {
+        args: [newProxyAddress],
+      } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
+
+      // expect().to.emit("OZGovernorModule", "OZGovernorModuleSetUp")
+
+      const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
+      expect(await moduleProxy.owner()).to.equal(params.owner)
+      expect(await moduleProxy.multisend()).to.equal(params.multisend)
+      expect(await moduleProxy.target()).to.equal(params.target)
+      expect(await moduleProxy.token()).to.equal(params.token)
+      expect(await moduleProxy.name()).to.equal(params.name)
+      expect(await moduleProxy.votingDelay()).to.equal(params.votingDelay)
+      expect(await moduleProxy.votingPeriod()).to.equal(params.votingPeriod)
+      expect(await moduleProxy.proposalThreshold()).to.equal(params.proposalThreshold)
     })
   })
 })

@@ -22,6 +22,18 @@ contract OZGovernorModule is
     event MultisendSet(address indexed multisend);
     /// @dev Emitted each time the Target is set.
     event TargetSet(address indexed previousTarget, address indexed newTarget);
+    /// @dev Emitted upon successful setup
+    event OZGovernorModuleSetUp(
+        address indexed owner,
+        address multisend,
+        address indexed target,
+        address token,
+        string name,
+        uint256 votingDelay,
+        uint256 votingPeriod,
+        uint256 proposalThreshold,
+        uint256 quorum
+    );
 
     /// @dev Transaction execution failed.
     error TransactionsFailed();
@@ -80,6 +92,17 @@ contract OZGovernorModule is
         __GovernorVotes_init(IVotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_quorum);
         transferOwnership(_owner);
+        emit OZGovernorModuleSetUp(
+            _owner,
+            _multisend,
+            _target,
+            _token,
+            _name,
+            _votingDelay,
+            _votingPeriod,
+            _proposalThreshold,
+            _quorum
+        );
     }
 
     /// @dev Execute via a Zodiac avatar, like a Gnosis Safe.
@@ -96,12 +119,7 @@ contract OZGovernorModule is
             values,
             calldatas
         );
-            bool success = IAvatar(target).execTransactionFromModule(
-            to,
-            value,
-            data,
-            operation
-        );
+        bool success = IAvatar(target).execTransactionFromModule(to, value, data, operation);
         if (!success) {
             revert TransactionsFailed();
         }
