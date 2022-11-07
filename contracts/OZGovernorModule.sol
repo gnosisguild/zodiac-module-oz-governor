@@ -27,15 +27,7 @@ contract OZGovernorModule is
     /// @dev Emitted upon successful setup
     event OZGovernorModuleSetUp(
         address indexed owner,
-        address indexed target,
-        address multisend,
-        address token,
-        string name,
-        uint256 votingDelay,
-        uint256 votingPeriod,
-        uint256 proposalThreshold,
-        uint256 quorum,
-        uint64 initialVoteExtension
+        address indexed target
     );
 
     /// @dev Transaction execution failed.
@@ -101,15 +93,7 @@ contract OZGovernorModule is
         __GovernorPreventLateQuorum_init(_initialVoteExtension);
         emit OZGovernorModuleSetUp(
             _owner,
-            _target,
-            _multisend,
-            _token,
-            _name,
-            _votingDelay,
-            _votingPeriod,
-            _proposalThreshold,
-            _quorum,
-            _initialVoteExtension
+            _target
         );
     }
 
