@@ -66,7 +66,7 @@ describe("OZGovernorModule", function () {
     })
   })
   describe("setUp()", function () {
-    it("Sucessfully deploys as a proxy", async function () {
+    it("Initializes a proxy deployment", async function () {
       const { moduleProxyFactory, ozGovernorModule, params, paramTypes } = await setup()
       const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [
         params.owner,
@@ -94,8 +94,6 @@ describe("OZGovernorModule", function () {
         args: [newProxyAddress],
       } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
 
-      // expect().to.emit("OZGovernorModule", "OZGovernorModuleSetUp")
-
       const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
       expect(await moduleProxy.owner()).to.equal(params.owner)
       expect(await moduleProxy.target()).to.equal(params.target)
@@ -105,6 +103,38 @@ describe("OZGovernorModule", function () {
       expect(await moduleProxy.votingDelay()).to.equal(params.votingDelay)
       expect(await moduleProxy.votingPeriod()).to.equal(params.votingPeriod)
       expect(await moduleProxy.proposalThreshold()).to.equal(params.proposalThreshold)
+    })
+
+    it("Should fail if setup is called more than once", async function () {
+      const { moduleProxyFactory, ozGovernorModule, params, paramTypes } = await setup()
+      const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [
+        params.owner,
+        params.target,
+        params.multisend,
+        params.token,
+        params.name,
+        params.votingDelay,
+        params.votingPeriod,
+        params.proposalThreshold,
+        params.quorum,
+      ])
+
+      const initParams = (await ozGovernorModule.populateTransaction.setUp(initData)).data
+      if (!initParams) {
+        throw console.error("error")
+      }
+
+      const receipt = await moduleProxyFactory
+        .deployModule(ozGovernorModule.address, initParams, 0)
+        .then((tx: any) => tx.wait())
+
+      // retrieve new address from event
+      const {
+        args: [newProxyAddress],
+      } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
+
+      const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
+      expect(moduleProxy.setUp(initParams)).to.be.revertedWith("Initializable: contract is already initialized")
     })
   })
 })
