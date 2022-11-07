@@ -5,7 +5,6 @@ const AddressZero = "0x0000000000000000000000000000000000000000"
 const AddressOne = "0x0000000000000000000000000000000000000001"
 
 const setup = async () => {
-  await deployments.fixture(["OZGovernorModule"])
   const { tester } = await getNamedAccounts()
   const testSigner = await ethers.getSigner(tester)
   const Avatar = await ethers.getContractFactory("TestAvatar")

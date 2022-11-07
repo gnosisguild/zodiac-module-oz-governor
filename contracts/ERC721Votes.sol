@@ -37,7 +37,6 @@ contract ERC721Votes is
     /// @dev Initialize function, will be triggered when a new proxy is deployed
     /// @param initializeParams Parameters of initialization encoded
     function setUp(bytes memory initializeParams) public initializer {
-        __Ownable_init();
         (address _owner, string memory _name, string memory _symbol) = abi.decode(
             initializeParams,
             (address, string, string)
