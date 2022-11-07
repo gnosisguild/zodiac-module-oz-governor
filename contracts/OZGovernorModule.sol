@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.9;
 
-// import "@gnosis.pm/zodiac/contracts/factory/FactoryFriendly.sol";
 import "@gnosis.pm/zodiac/contracts/interfaces/IAvatar.sol";
 import "./MultisendEncoder.sol";
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
