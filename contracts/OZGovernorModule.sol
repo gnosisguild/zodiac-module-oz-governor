@@ -40,7 +40,6 @@ contract OZGovernorModule is
     error TransactionsFailed();
 
     address public owner;
-    address public avatar;
     address public multisend;
     address public target;
 
