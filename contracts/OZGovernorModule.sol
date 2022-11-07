@@ -8,13 +8,15 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettin
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorPreventLateQuorumUpgradeable.sol";
 
 contract OZGovernorModule is
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
     GovernorVotesUpgradeable,
-    GovernorVotesQuorumFractionUpgradeable
+    GovernorVotesQuorumFractionUpgradeable,
+    GovernorPreventLateQuorumUpgradeable
 {
     /// @dev Emitted each time the multisend address is set.
     event MultisendSet(address indexed multisend);
@@ -32,7 +34,8 @@ contract OZGovernorModule is
         uint256 votingDelay,
         uint256 votingPeriod,
         uint256 proposalThreshold,
-        uint256 quorum
+        uint256 quorum,
+        uint64 initialVoteExtension
     );
 
     /// @dev Transaction execution failed.
@@ -51,7 +54,8 @@ contract OZGovernorModule is
         uint256 _votingDelay,
         uint256 _votingPeriod,
         uint256 _proposalThreshold,
-        uint256 _quorum
+        uint256 _quorum,
+        uint64 _initialVoteExtension
     ) {
         bytes memory initializeParams = abi.encode(
             _owner,
@@ -62,7 +66,8 @@ contract OZGovernorModule is
             _votingDelay,
             _votingPeriod,
             _proposalThreshold,
-            _quorum
+            _quorum,
+            _initialVoteExtension
         );
         setUp(initializeParams);
     }
@@ -79,10 +84,11 @@ contract OZGovernorModule is
             uint256 _votingDelay,
             uint256 _votingPeriod,
             uint256 _proposalThreshold,
-            uint256 _quorum
+            uint256 _quorum,
+            uint64 _initialVoteExtension
         ) = abi.decode(
                 initializeParams,
-                (address, address, address, address, string, uint256, uint256, uint256, uint256)
+                (address, address, address, address, string, uint256, uint256, uint256, uint256, uint64)
             );
         owner = _owner;
         target = _target;
@@ -92,6 +98,7 @@ contract OZGovernorModule is
         __GovernorCountingSimple_init();
         __GovernorVotes_init(IVotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_quorum);
+        __GovernorPreventLateQuorum_init(_initialVoteExtension);
         emit OZGovernorModuleSetUp(
             _owner,
             _target,
@@ -101,7 +108,8 @@ contract OZGovernorModule is
             _votingDelay,
             _votingPeriod,
             _proposalThreshold,
-            _quorum
+            _quorum,
+            _initialVoteExtension
         );
     }
 
@@ -153,5 +161,18 @@ contract OZGovernorModule is
         returns (uint256)
     {
         return super.proposalThreshold();
+    }
+
+    function _castVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        string memory reason
+    ) internal virtual override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable) returns (uint256) {
+        return GovernorPreventLateQuorumUpgradeable._castVote(proposalId, account, support, reason);
+    }
+
+    function proposalDeadline(uint256 proposalId) public view virtual override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable) returns (uint256) {
+        return GovernorPreventLateQuorumUpgradeable.proposalDeadline(proposalId);
     }
 }

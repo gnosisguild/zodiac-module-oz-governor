@@ -30,6 +30,7 @@ const setup = async () => {
     votingPeriod: 60,
     proposalThreshold: 0,
     quorum: 1,
+    lateQuorumVoteExtension: 60,
   }
   const ozGovernorModule = await OZGovernorModuleFactory.deploy(
     params.owner,
@@ -41,6 +42,7 @@ const setup = async () => {
     params.votingPeriod,
     params.proposalThreshold,
     params.quorum,
+    params.lateQuorumVoteExtension,
   )
   const ModuleProxyFactory = await ethers.getContractFactory("ModuleProxyFactory")
   const moduleProxyFactory = await ModuleProxyFactory.deploy()
@@ -51,15 +53,16 @@ const setup = async () => {
 describe("OZGovernorModule", function () {
   describe("Constructor", function () {
     it("Successfully deploys contract and sets variables", async function () {
-      const { avatar, multisend, ozGovernorModule } = await setup()
-      expect(await ozGovernorModule.owner()).to.equal(avatar.address)
-      expect(await ozGovernorModule.multisend()).to.equal(multisend.address)
-      expect(await ozGovernorModule.target()).to.equal(avatar.address)
-      expect(await ozGovernorModule.token()).to.equal(AddressOne)
-      expect(await ozGovernorModule.name()).to.equal("Test Governor")
-      expect(await ozGovernorModule.votingDelay()).to.equal(1)
-      expect(await ozGovernorModule.votingPeriod()).to.equal(60)
-      expect(await ozGovernorModule.proposalThreshold()).to.equal(0)
+      const { ozGovernorModule, params } = await setup()
+      expect(await ozGovernorModule.owner()).to.equal(params.owner)
+      expect(await ozGovernorModule.multisend()).to.equal(params.multisend)
+      expect(await ozGovernorModule.target()).to.equal(params.target)
+      expect(await ozGovernorModule.token()).to.equal(params.token)
+      expect(await ozGovernorModule.name()).to.equal(params.name)
+      expect(await ozGovernorModule.votingDelay()).to.equal(params.votingDelay)
+      expect(await ozGovernorModule.votingPeriod()).to.equal(params.lateQuorumVoteExtension)
+      expect(await ozGovernorModule.proposalThreshold()).to.equal(params.proposalThreshold)
+      expect(await ozGovernorModule.lateQuorumVoteExtension()).to.equal(params.lateQuorumVoteExtension)
       // not sure why these checks keep failing. Commenting out for now.
       // const blockNumber = await ethers.provider.getBlockNumber()
       // expect(await ozGovernorModule.quorum(blockNumber)).to.equal(1)
@@ -103,6 +106,7 @@ describe("OZGovernorModule", function () {
       expect(await moduleProxy.votingDelay()).to.equal(params.votingDelay)
       expect(await moduleProxy.votingPeriod()).to.equal(params.votingPeriod)
       expect(await moduleProxy.proposalThreshold()).to.equal(params.proposalThreshold)
+      expect(await moduleProxy.lateQuorumVoteExtension()).to.equal(params.lateQuorumVoteExtension)
     })
 
     it("Should fail if setup is called more than once", async function () {
@@ -117,6 +121,7 @@ describe("OZGovernorModule", function () {
         params.votingPeriod,
         params.proposalThreshold,
         params.quorum,
+        params.lateQuorumVoteExtension,
       ])
 
       const initParams = (await ozGovernorModule.populateTransaction.setUp(initData)).data
