@@ -38,8 +38,6 @@ contract OZGovernorModule is
 
     /// @dev Transaction execution failed.
     error TransactionsFailed();
-    /// @dev Only callable by owner.
-    error OnlyOwner();
 
     address public owner;
     address public avatar;
