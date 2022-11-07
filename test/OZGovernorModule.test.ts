@@ -19,7 +19,18 @@ const setup = async () => {
       MultisendEncoder: multisendEncoder.address,
     },
   })
-  const paramTypes = ["address", "address", "address", "address", "string", "uint256", "uint256", "uint256", "uint256"]
+  const paramTypes = [
+    "address",
+    "address",
+    "address",
+    "address",
+    "string",
+    "uint256",
+    "uint256",
+    "uint256",
+    "uint256",
+    "uint64",
+  ]
   const params = {
     owner: avatar.address,
     target: avatar.address,
@@ -81,6 +92,7 @@ describe("OZGovernorModule", function () {
         params.votingPeriod,
         params.proposalThreshold,
         params.quorum,
+        params.lateQuorumVoteExtension,
       ])
 
       const initParams = (await ozGovernorModule.populateTransaction.setUp(initData)).data
