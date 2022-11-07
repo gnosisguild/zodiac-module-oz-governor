@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.9;
 
-import "@gnosis.pm/zodiac/contracts/factory/FactoryFriendly.sol";
+// import "@gnosis.pm/zodiac/contracts/factory/FactoryFriendly.sol";
 import "@gnosis.pm/zodiac/contracts/interfaces/IAvatar.sol";
 import "./MultisendEncoder.sol";
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
@@ -11,22 +11,23 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesU
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 
 contract OZGovernorModule is
-    FactoryFriendly,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable
 {
+    /// @dev Emitted each time the avatar address is set.
+    event AvatarSet(address indexed previousAvatar, address indexed newAvatar);
     /// @dev Emitted each time the multisend address is set.
     event MultisendSet(address indexed multisend);
     /// @dev Emitted each time the Target is set.
     event TargetSet(address indexed previousTarget, address indexed newTarget);
     /// @dev Emitted upon successful setup
     event OZGovernorModuleSetUp(
-        address indexed owner,
-        address multisend,
+        address indexed avatar,
         address indexed target,
+        address multisend,
         address token,
         string name,
         uint256 votingDelay,
@@ -38,13 +39,14 @@ contract OZGovernorModule is
     /// @dev Transaction execution failed.
     error TransactionsFailed();
 
+    address public avatar;
     address public multisend;
     address public target;
 
     constructor(
-        address _owner,
-        address _multisend,
+        address _avatar,
         address _target,
+        address _multisend,
         address _token,
         string memory _name,
         uint256 _votingDelay,
@@ -53,9 +55,9 @@ contract OZGovernorModule is
         uint256 _quorum
     ) {
         bytes memory initializeParams = abi.encode(
-            _owner,
-            _multisend,
+            _avatar,
             _target,
+            _multisend,
             _token,
             _name,
             _votingDelay,
@@ -68,12 +70,11 @@ contract OZGovernorModule is
 
     /// @dev Initialize function, will be triggered when a new proxy is deployed
     /// @param initializeParams Parameters of initialization encoded
-    function setUp(bytes memory initializeParams) public override initializer {
-        __Ownable_init();
+    function setUp(bytes memory initializeParams) public initializer {
         (
-            address _owner,
-            address _multisend,
+            address _avatar,
             address _target,
+            address _multisend,
             address _token,
             string memory _name,
             uint256 _votingDelay,
@@ -84,18 +85,18 @@ contract OZGovernorModule is
                 initializeParams,
                 (address, address, address, address, string, uint256, uint256, uint256, uint256)
             );
-        setMultisend(_multisend);
-        setTarget(_target);
+        avatar = _avatar;
+        target = _target;
+        multisend = _multisend;
         __Governor_init(_name);
         __GovernorSettings_init(_votingDelay, _votingPeriod, _proposalThreshold);
         __GovernorCountingSimple_init();
         __GovernorVotes_init(IVotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_quorum);
-        transferOwnership(_owner);
         emit OZGovernorModuleSetUp(
-            _owner,
-            _multisend,
+            _avatar,
             _target,
+            _multisend,
             _token,
             _name,
             _votingDelay,
@@ -125,14 +126,23 @@ contract OZGovernorModule is
         }
     }
 
-    function setMultisend(address _multisend) public onlyOwner {
+    function setAvatar(address _avatar) public onlyGovernance {
+        emit AvatarSet(avatar, _avatar);
+        avatar = _avatar;
+    }
+
+    function setMultisend(address _multisend) public onlyGovernance {
         multisend = _multisend;
         emit MultisendSet(_multisend);
     }
 
-    function setTarget(address _target) public onlyOwner {
+    function setTarget(address _target) public onlyGovernance {
         emit TargetSet(target, _target);
         target = _target;
+    }
+
+    function _executor() internal view override returns (address) {
+        return avatar;
     }
 
     // The following functions are overrides required by Solidity.
