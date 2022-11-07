@@ -17,9 +17,6 @@ contract OZGovernorModule is
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable
 {
-    // /// @dev Emitted each time the avatar address is set.
-    // event AvatarSet(address indexed previousAvatar, address indexed newAvatar);
-    
     /// @dev Emitted each time the multisend address is set.
     event MultisendSet(address indexed multisend);
     /// @dev Emitted each time the Target is set.
@@ -29,7 +26,6 @@ contract OZGovernorModule is
     /// @dev Emitted upon successful setup
     event OZGovernorModuleSetUp(
         address indexed owner,
-        // address indexed avatar,
         address indexed target,
         address multisend,
         address token,
@@ -52,7 +48,6 @@ contract OZGovernorModule is
 
     constructor(
         address _owner,
-        // address _avatar,
         address _target,
         address _multisend,
         address _token,
@@ -64,7 +59,6 @@ contract OZGovernorModule is
     ) {
         bytes memory initializeParams = abi.encode(
             _owner,
-            // _avatar,
             _target,
             _multisend,
             _token,
@@ -82,7 +76,6 @@ contract OZGovernorModule is
     function setUp(bytes memory initializeParams) public initializer {
         (
             address _owner,
-            // address _avatar,
             address _target,
             address _multisend,
             address _token,
@@ -96,7 +89,6 @@ contract OZGovernorModule is
                 (address, address, address, address, string, uint256, uint256, uint256, uint256)
             );
         owner = _owner;
-        // avatar = _avatar;
         target = _target;
         multisend = _multisend;
         __Governor_init(_name);
@@ -106,7 +98,6 @@ contract OZGovernorModule is
         __GovernorVotesQuorumFraction_init(_quorum);
         emit OZGovernorModuleSetUp(
             _owner,
-            // _avatar,
             _target,
             _multisend,
             _token,
@@ -143,11 +134,6 @@ contract OZGovernorModule is
         owner = _owner;
     }
 
-    // function setAvatar(address _avatar) public onlyGovernance {
-    //     emit AvatarSet(avatar, _avatar);
-    //     avatar = _avatar;
-    // }
-
     function setMultisend(address _multisend) public onlyGovernance {
         multisend = _multisend;
         emit MultisendSet(_multisend);
@@ -162,7 +148,7 @@ contract OZGovernorModule is
         return owner;
     }
 
-    // The following functions are overrides required by Solidity.
+    /// The following functions are overrides required by Solidity.
 
     function proposalThreshold()
         public
