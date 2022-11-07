@@ -9,8 +9,20 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20Pe
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract MyToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC20PermitUpgradeable, ERC20VotesUpgradeable {
-    constructor(address _owner, string memory  _name, string memory _symbol) {
+contract ERC20Votes is
+    Initializable,
+    ERC20Upgradeable,
+    ERC20BurnableUpgradeable,
+    PausableUpgradeable,
+    OwnableUpgradeable,
+    ERC20PermitUpgradeable,
+    ERC20VotesUpgradeable
+{
+    constructor(
+        address _owner,
+        string memory _name,
+        string memory _symbol
+    ) {
         bytes memory initializeParams = abi.encode(_owner, _name, _symbol);
         setUp(initializeParams);
     }
@@ -18,9 +30,10 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, P
     /// @dev Initialize function, will be triggered when a new proxy is deployed
     /// @param initializeParams Parameters of initialization encoded
     function setUp(bytes memory initializeParams) public initializer {
-        __Ownable_init();
-        (address _owner, string memory _name, string memory _symbol)
-        = abi.decode(initializeParams, (address, string, string));
+        (address _owner, string memory _name, string memory _symbol) = abi.decode(
+            initializeParams,
+            (address, string, string)
+        );
 
         __ERC20_init(_name, _symbol);
         __ERC20Burnable_init();
@@ -43,34 +56,29 @@ contract MyToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, P
         _mint(to, amount);
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount)
-        internal
-        whenNotPaused
-        override
-    {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override whenNotPaused {
         super._beforeTokenTransfer(from, to, amount);
     }
 
     // The following functions are overrides required by Solidity.
 
-    function _afterTokenTransfer(address from, address to, uint256 amount)
-        internal
-        override(ERC20Upgradeable, ERC20VotesUpgradeable)
-    {
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
         super._afterTokenTransfer(from, to, amount);
     }
 
-    function _mint(address to, uint256 amount)
-        internal
-        override(ERC20Upgradeable, ERC20VotesUpgradeable)
-    {
+    function _mint(address to, uint256 amount) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
         super._mint(to, amount);
     }
 
-    function _burn(address account, uint256 amount)
-        internal
-        override(ERC20Upgradeable, ERC20VotesUpgradeable)
-    {
+    function _burn(address account, uint256 amount) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
         super._burn(account, amount);
     }
 }
