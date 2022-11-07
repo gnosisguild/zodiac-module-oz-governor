@@ -21,7 +21,7 @@ const setup = async () => {
   })
   const paramTypes = ["address", "address", "address", "address", "string", "uint256", "uint256", "uint256", "uint256"]
   const params = {
-    avatar: avatar.address,
+    owner: avatar.address,
     target: avatar.address,
     multisend: multisend.address,
     token: AddressOne,
@@ -32,7 +32,7 @@ const setup = async () => {
     quorum: 1,
   }
   const ozGovernorModule = await OZGovernorModuleFactory.deploy(
-    params.avatar,
+    params.owner,
     params.target,
     params.multisend,
     params.token,
@@ -52,7 +52,7 @@ describe("OZGovernorModule", function () {
   describe("Constructor", function () {
     it("Successfully deploys contract and sets variables", async function () {
       const { avatar, multisend, ozGovernorModule } = await setup()
-      expect(await ozGovernorModule.avatar()).to.equal(avatar.address)
+      expect(await ozGovernorModule.owner()).to.equal(avatar.address)
       expect(await ozGovernorModule.multisend()).to.equal(multisend.address)
       expect(await ozGovernorModule.target()).to.equal(avatar.address)
       expect(await ozGovernorModule.token()).to.equal(AddressOne)
@@ -69,7 +69,7 @@ describe("OZGovernorModule", function () {
     it("Sucessfully deploys as a proxy", async function () {
       const { moduleProxyFactory, ozGovernorModule, params, paramTypes } = await setup()
       const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [
-        params.avatar,
+        params.owner,
         params.target,
         params.multisend,
         params.token,
@@ -97,7 +97,7 @@ describe("OZGovernorModule", function () {
       // expect().to.emit("OZGovernorModule", "OZGovernorModuleSetUp")
 
       const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
-      expect(await moduleProxy.avatar()).to.equal(params.avatar)
+      expect(await moduleProxy.owner()).to.equal(params.owner)
       expect(await moduleProxy.target()).to.equal(params.target)
       expect(await moduleProxy.multisend()).to.equal(params.multisend)
       expect(await moduleProxy.token()).to.equal(params.token)
