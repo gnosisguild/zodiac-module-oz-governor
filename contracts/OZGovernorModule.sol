@@ -33,8 +33,11 @@ contract OZGovernorModule is
     /// @dev Transaction execution failed.
     error TransactionsFailed();
 
+    /// @dev Functions restricted to `onlyGovernance()` are only callable by `owner`.
     address public owner;
+    /// @dev Address of the multisend contract that this contract should use to bundle transactions.
     address public multisend;
+    /// @dev Address that this module will pass transactions to.
     address public target;
 
     constructor(

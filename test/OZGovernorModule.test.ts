@@ -1,18 +1,28 @@
+import { Block } from "@ethersproject/abstract-provider"
 import { expect } from "chai"
-import { ethers, deployments, getNamedAccounts } from "hardhat"
+import hre, { ethers } from "hardhat"
+import { MultisendEncoder__factory } from "../typechain-types"
 
 const AddressZero = "0x0000000000000000000000000000000000000000"
 const AddressOne = "0x0000000000000000000000000000000000000001"
 
 const setup = async () => {
-  const { tester } = await getNamedAccounts()
-  const testSigner = await ethers.getSigner(tester)
+  // const { tester } = await getNamedAccounts()
+  // const testSigner = await ethers.getSigner(tester)
+  const [wallet] = await ethers.getSigners()
   const Avatar = await ethers.getContractFactory("TestAvatar")
   const avatar = await Avatar.deploy()
   const Multisend = await ethers.getContractFactory("MultiSend")
   const multisend = await Multisend.deploy()
   const MultisendEncoder = await ethers.getContractFactory("MultisendEncoder")
   const multisendEncoder = await MultisendEncoder.deploy()
+  const ERC20Votes = await ethers.getContractFactory("ERC20Votes")
+  const erc20Token = await ERC20Votes.deploy(wallet.address, "Token", "TKN")
+
+  await erc20Token.mint(wallet.address, 1000000)
+  await erc20Token.delegate(wallet.address)
+  await erc20Token.transfer(avatar.address, 100000)
+
   const OZGovernorModuleFactory = await ethers.getContractFactory("OZGovernorModule", {
     libraries: {
       MultisendEncoder: multisendEncoder.address,
@@ -34,13 +44,13 @@ const setup = async () => {
     owner: avatar.address,
     target: avatar.address,
     multisend: multisend.address,
-    token: AddressOne,
+    token: erc20Token.address,
     name: "Test Governor",
-    votingDelay: 1,
+    votingDelay: 0,
     votingPeriod: 60,
     proposalThreshold: 0,
     quorum: 1,
-    lateQuorumVoteExtension: 60,
+    lateQuorumVoteExtension: 10,
   }
   const ozGovernorModule = await OZGovernorModuleFactory.deploy(
     params.owner,
@@ -54,14 +64,25 @@ const setup = async () => {
     params.quorum,
     params.lateQuorumVoteExtension,
   )
+  await avatar.enableModule(ozGovernorModule.address)
   const ModuleProxyFactory = await ethers.getContractFactory("ModuleProxyFactory")
   const moduleProxyFactory = await ModuleProxyFactory.deploy()
 
-  return { avatar, multisend, moduleProxyFactory, ozGovernorModule, params, paramTypes, testSigner }
+  return {
+    avatar,
+    multisend,
+    moduleProxyFactory,
+    ozGovernorModule,
+    params,
+    paramTypes,
+    wallet,
+    erc20Token,
+    multisendEncoder,
+  }
 }
 
 describe("OZGovernorModule", function () {
-  describe("Constructor", function () {
+  describe("constructor", function () {
     it("Successfully deploys contract and sets variables", async function () {
       const { ozGovernorModule, params } = await setup()
       expect(await ozGovernorModule.owner()).to.equal(params.owner)
@@ -70,7 +91,7 @@ describe("OZGovernorModule", function () {
       expect(await ozGovernorModule.token()).to.equal(params.token)
       expect(await ozGovernorModule.name()).to.equal(params.name)
       expect(await ozGovernorModule.votingDelay()).to.equal(params.votingDelay)
-      expect(await ozGovernorModule.votingPeriod()).to.equal(params.lateQuorumVoteExtension)
+      expect(await ozGovernorModule.votingPeriod()).to.equal(params.votingPeriod)
       expect(await ozGovernorModule.proposalThreshold()).to.equal(params.proposalThreshold)
       expect(await ozGovernorModule.lateQuorumVoteExtension()).to.equal(params.lateQuorumVoteExtension)
       // not sure why these checks keep failing. Commenting out for now.
@@ -152,5 +173,59 @@ describe("OZGovernorModule", function () {
       const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
       expect(moduleProxy.setUp(initParams)).to.be.revertedWith("Initializable: contract is already initialized")
     })
+  })
+
+  describe("_execute()", function () {
+    it("Should execute proposed transactions", async function () {
+      const { ozGovernorModule, erc20Token, wallet } = await setup()
+      await erc20Token.transfer(ozGovernorModule.address, 5000)
+      await erc20Token.transferOwnership(ozGovernorModule.address)
+      const calldata = await erc20Token.populateTransaction.transfer(wallet.address, 42).then((tx: any) => tx.data)
+      const proposal = {
+        targets: [erc20Token.address, erc20Token.address],
+        values: [0, 0],
+        calldatas: [calldata, calldata],
+        description: "A couple of token transfers",
+      }
+
+      const receipt = await ozGovernorModule
+        .propose(proposal.targets, proposal.values, proposal.calldatas, proposal.description)
+        .then((tx: any) => tx.wait())
+      const {
+        args: [proposalId],
+      } = receipt.events.find(({ event }: { event: string }) => event === "ProposalCreated")
+
+      await ozGovernorModule.castVote(proposalId, 1)
+
+      for (let index = 0; index < 100; index++) {
+        await hre.network.provider.send("evm_mine", [])
+      }
+
+      await ozGovernorModule.execute(
+        proposal.targets,
+        proposal.values,
+        proposal.calldatas,
+        await ethers.utils.solidityKeccak256(["string"], [proposal.description]),
+      )
+
+      expect(await erc20Token.balanceOf(wallet.address)).to.equal(895084)
+    })
+
+    it("Should revert with TransactionsFailed() if module transactions fail")
+  })
+
+  describe("transferOwnership()", function () {
+    it("Should transfer ownership and emit OwnershipTransferred() event")
+    it("Should revert if caller is not owner")
+  })
+
+  describe("setMultisend()", function () {
+    it("Should set the multisend address and emit the MultisendSet() event")
+    it("Should revert if caller is not owner")
+  })
+
+  describe("setTarget()", function () {
+    it("Should set the target address and emit the TargetSet() event")
+    it("Should revert if caller is not owner")
   })
 })
