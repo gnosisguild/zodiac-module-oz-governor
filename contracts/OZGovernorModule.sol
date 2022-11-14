@@ -25,10 +25,7 @@ contract OZGovernorModule is
     /// @dev Emitted each time ownership is transferred.
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     /// @dev Emitted upon successful setup
-    event OZGovernorModuleSetUp(
-        address indexed owner,
-        address indexed target
-    );
+    event OZGovernorModuleSetUp(address indexed owner, address indexed target);
 
     /// @dev Transaction execution failed.
     error TransactionsFailed();
@@ -94,10 +91,7 @@ contract OZGovernorModule is
         __GovernorVotes_init(IVotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_quorum);
         __GovernorPreventLateQuorum_init(_initialVoteExtension);
-        emit OZGovernorModuleSetUp(
-            _owner,
-            _target
-        );
+        emit OZGovernorModuleSetUp(_owner, _target);
     }
 
     /// @dev Execute via a Zodiac avatar, like a Gnosis Safe.
@@ -159,7 +153,13 @@ contract OZGovernorModule is
         return GovernorPreventLateQuorumUpgradeable._castVote(proposalId, account, support, reason);
     }
 
-    function proposalDeadline(uint256 proposalId) public view virtual override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable) returns (uint256) {
+    function proposalDeadline(uint256 proposalId)
+        public
+        view
+        virtual
+        override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable)
+        returns (uint256)
+    {
         return GovernorPreventLateQuorumUpgradeable.proposalDeadline(proposalId);
     }
 }
