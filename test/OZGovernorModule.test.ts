@@ -1,9 +1,6 @@
-import { Block } from "@ethersproject/abstract-provider"
 import { expect } from "chai"
+import { PopulatedTransaction } from "ethers"
 import hre, { ethers } from "hardhat"
-import { MultisendEncoder__factory } from "../typechain-types"
-
-const AddressZero = "0x0000000000000000000000000000000000000000"
 const AddressOne = "0x0000000000000000000000000000000000000001"
 
 const setup = async () => {
@@ -176,7 +173,42 @@ describe("OZGovernorModule", function () {
   })
 
   describe("_execute()", function () {
-    it("Should execute proposed transactions", async function () {
+    it("Should execute proposed transaction", async function () {
+      const { ozGovernorModule, erc20Token, wallet } = await setup()
+      await erc20Token.transfer(ozGovernorModule.address, 5000)
+      await erc20Token.transferOwnership(ozGovernorModule.address)
+      const calldata = await erc20Token.populateTransaction.transfer(wallet.address, 42).then((tx: any) => tx.data)
+      const proposal = {
+        targets: [erc20Token.address],
+        values: [0],
+        calldatas: [calldata],
+        description: "A token transfer",
+      }
+
+      const receipt = await ozGovernorModule
+        .propose(proposal.targets, proposal.values, proposal.calldatas, proposal.description)
+        .then((tx: any) => tx.wait())
+      const {
+        args: [proposalId],
+      } = receipt.events.find(({ event }: { event: string }) => event === "ProposalCreated")
+
+      await ozGovernorModule.castVote(proposalId, 1)
+
+      for (let index = 0; index < 100; index++) {
+        await hre.network.provider.send("evm_mine", [])
+      }
+
+      await ozGovernorModule.execute(
+        proposal.targets,
+        proposal.values,
+        proposal.calldatas,
+        await ethers.utils.solidityKeccak256(["string"], [proposal.description]),
+      )
+
+      expect(await erc20Token.balanceOf(wallet.address)).to.equal(895042)
+    })
+
+    it("Should execute batch of proposed transactions", async function () {
       const { ozGovernorModule, erc20Token, wallet } = await setup()
       await erc20Token.transfer(ozGovernorModule.address, 5000)
       await erc20Token.transferOwnership(ozGovernorModule.address)
@@ -211,21 +243,90 @@ describe("OZGovernorModule", function () {
       expect(await erc20Token.balanceOf(wallet.address)).to.equal(895084)
     })
 
-    it("Should revert with TransactionsFailed() if module transactions fail")
+    it("Should revert with TransactionsFailed() if module transactions fail", async function () {
+      const { avatar, ozGovernorModule, erc20Token } = await setup()
+      // await erc20Token.transfer(ozGovernorModule.address, 5000)
+      await erc20Token.transferOwnership(ozGovernorModule.address)
+      const calldata = await erc20Token.populateTransaction.mint(avatar.address, 10000).then((tx: any) => tx.data)
+      const proposal = {
+        targets: [erc20Token.address],
+        values: [0],
+        calldatas: [calldata],
+        description: "Mint some tokens",
+      }
+
+      const receipt = await ozGovernorModule
+        .propose(proposal.targets, proposal.values, proposal.calldatas, proposal.description)
+        .then((tx: any) => tx.wait())
+      const {
+        args: [proposalId],
+      } = receipt.events.find(({ event }: { event: string }) => event === "ProposalCreated")
+
+      await ozGovernorModule.castVote(proposalId, 1)
+
+      for (let index = 0; index < 100; index++) {
+        await hre.network.provider.send("evm_mine", [])
+      }
+
+      await expect(
+        ozGovernorModule.execute(
+          proposal.targets,
+          proposal.values,
+          proposal.calldatas,
+          await ethers.utils.solidityKeccak256(["string"], [proposal.description]),
+        ),
+      ).to.be.revertedWith("TransactionsFailed()")
+    })
   })
 
   describe("transferOwnership()", function () {
-    it("Should transfer ownership and emit OwnershipTransferred() event")
-    it("Should revert if caller is not owner")
+    it("Should transfer ownership and emit OwnershipTransferred() event", async function () {
+      const { avatar, ozGovernorModule, wallet } = await setup()
+      const tx: PopulatedTransaction = await ozGovernorModule.populateTransaction.transferOwnership(wallet.address)
+      if (!tx.data) {
+        throw new Error("no tx data")
+      }
+      expect(await avatar.exec(ozGovernorModule.address, 0, tx.data))
+        .to.emit(ozGovernorModule, "OwnershipTransferred()")
+        .withArgs(avatar.address)
+    })
+    it("Should revert if caller is not owner", async function () {
+      const { ozGovernorModule, wallet } = await setup()
+      await expect(ozGovernorModule.transferOwnership(wallet.address)).to.be.revertedWith("Governor: onlyGovernance")
+    })
   })
 
   describe("setMultisend()", function () {
-    it("Should set the multisend address and emit the MultisendSet() event")
-    it("Should revert if caller is not owner")
+    it("Should set the multisend address and emit the MultisendSet() event", async function () {
+      const { avatar, ozGovernorModule } = await setup()
+      const tx: PopulatedTransaction = await ozGovernorModule.populateTransaction.setMultisend(AddressOne)
+      if (!tx.data) {
+        throw new Error("no tx data")
+      }
+      expect(await avatar.exec(ozGovernorModule.address, 0, tx.data))
+        .to.emit(ozGovernorModule, "MultisendSet()")
+        .withArgs(AddressOne)
+    })
+    it("Should revert if caller is not owner", async function () {
+      const { ozGovernorModule } = await setup()
+      await expect(ozGovernorModule.setMultisend(AddressOne)).to.be.revertedWith("Governor: onlyGovernance")
+    })
   })
 
   describe("setTarget()", function () {
-    it("Should set the target address and emit the TargetSet() event")
-    it("Should revert if caller is not owner")
+    it("Should set the target address and emit the TargetSet() event", async function () {
+      const { avatar, ozGovernorModule } = await setup()
+      const tx: PopulatedTransaction = await ozGovernorModule.populateTransaction.setTarget(AddressOne)
+      if (!tx.data) {
+        throw new Error("no tx data")
+      }
+      expect(await avatar.exec(ozGovernorModule.address, 0, tx.data))
+        .to.emit(ozGovernorModule, "setTarget()")
+        .withArgs(AddressOne)
+    })
+    it("Should revert if caller is not owner", async function () {
+      const { ozGovernorModule } = await setup()
+      await expect(ozGovernorModule.setTarget(AddressOne)).to.be.revertedWith("Governor: onlyGovernance")
+    })
   })
 })
