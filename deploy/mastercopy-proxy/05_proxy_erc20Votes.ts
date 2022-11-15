@@ -1,4 +1,4 @@
-import { deployAndSetUpCustomModule } from "@gnosis.pm/zodiac/dist/src/factory/factory"
+import { deployAndSetUpCustomModule } from "@gnosis.pm/zodiac"
 import { getChainId } from "hardhat"
 import "hardhat-deploy"
 import { DeployFunction } from "hardhat-deploy/types"
@@ -10,18 +10,17 @@ const deploy: DeployFunction = async function ({ deployments, getNamedAccounts, 
   const deployerSigner = await ethers.getSigner(deployer)
   const chainId = await getChainId()
 
-  console.log("deployer", deployer)
-
-  const erc20VotesMastercopyDeployment = await deployments.get("ERC20Votes")
+  const erc20VotesMastercopyDeployment = await deployments.get("ERC20VotesMastercopy")
+  const avatarDeployment = await deployments.get("TestAvatar")
 
   const { transaction } = deployAndSetUpCustomModule(
     erc20VotesMastercopyDeployment.address,
     erc20VotesMastercopyDeployment.abi,
     {
-      values: [deployer, "Votes Proxy Token", "PVOTE"],
+      values: [avatarDeployment.address, "Votes Proxy Token", "PVOTE"],
       types: ["address", "string", "string"],
     },
-    ethers.provider,
+    ethers.provider as any,
     Number(chainId),
     Date.now().toString(),
   )

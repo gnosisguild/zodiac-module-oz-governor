@@ -3,24 +3,24 @@ import { ethers } from "hardhat"
 import "hardhat-deploy"
 import { DeployFunction } from "hardhat-deploy/types"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
-import ERC20_CONTRACT_ARTIFACT from "../../artifacts/contracts/ERC20Votes.sol/ERC20Votes.json"
+import ERC721_CONTRACT_ARTIFACT from "../../artifacts/contracts/ERC721Votes.sol/ERC721Votes.json"
 
 const oneAddress = "0x0000000000000000000000000000000000000001"
 
 const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  console.log("Deploying ERC20 Votes Mastercopy")
+  console.log("Deploying ERC721 Votes Mastercopy")
 
-  const votesTokenContract: any = await ethers.getContractFactory("ERC20Votes")
+  const votesTokenContract: any = await ethers.getContractFactory("ERC721Votes")
 
   const address = await deployMastercopy(hre, votesTokenContract, [oneAddress, "Votes Token", "VOTE"])
 
-  console.log("ERC20Votes deployed to:", address)
+  console.log("ERC721Votes deployed to:", address)
 
-  hre.deployments.save("ERC20VotesMastercopy", {
-    abi: ERC20_CONTRACT_ARTIFACT.abi,
+  hre.deployments.save("ERC721VotesMastercopy", {
+    abi: ERC721_CONTRACT_ARTIFACT.abi,
     address: address,
   })
 }
 
-deploy.tags = ["testDependencies", "erc20VotesMastercopy"]
+deploy.tags = ["testDependencies", "erc721VotesMastercopy"]
 export default deploy

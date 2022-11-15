@@ -1,7 +1,7 @@
 import "hardhat-deploy"
 import { DeployFunction } from "hardhat-deploy/types"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
-import { deployAndSetUpCustomModule } from "@gnosis.pm/zodiac/dist/src/factory/factory"
+import { deployAndSetUpCustomModule } from "@gnosis.pm/zodiac"
 
 const firstAddress = "0x0000000000000000000000000000000000000001"
 
@@ -50,7 +50,7 @@ const deploy: DeployFunction = async function ({
         "uint64",
       ],
     },
-    ethers.provider,
+    ethers.provider as any,
     Number(chainId),
     Date.now().toString(),
   )
