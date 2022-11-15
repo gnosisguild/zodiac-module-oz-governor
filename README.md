@@ -57,6 +57,7 @@ To deploy the mastercopy of the ERC721 Votes token:
 ```
 yarn deploy --tags erc721VotesMastercopy
 ```
+
 ### License
 
 Created under the [LGPL-3.0+ license](LICENSE).
