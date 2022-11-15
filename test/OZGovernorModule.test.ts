@@ -81,7 +81,7 @@ const setup = async () => {
 describe("OZGovernorModule", function () {
   describe("constructor", function () {
     it("Successfully deploys contract and sets variables", async function () {
-      const { ozGovernorModule, params, erc20Token } = await setup()
+      const { ozGovernorModule, params } = await setup()
       expect(await ozGovernorModule.owner()).to.equal(params.owner)
       expect(await ozGovernorModule.multisend()).to.equal(params.multisend)
       expect(await ozGovernorModule.target()).to.equal(params.target)
