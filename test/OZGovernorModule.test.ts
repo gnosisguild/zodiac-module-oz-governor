@@ -329,4 +329,11 @@ describe("OZGovernorModule", function () {
       await expect(ozGovernorModule.setTarget(AddressOne)).to.be.revertedWith("Governor: onlyGovernance")
     })
   })
+
+  describe("version()", function () {
+    it("Should return 'Zodaic OZ Governor Module: v1.0.0'", async function () {
+      const { ozGovernorModule } = await setup()
+      expect(await ozGovernorModule.version()).to.equal("Zodaic OZ Governor Module: v1.0.0")
+    })
+  })
 })
