@@ -81,7 +81,7 @@ const setup = async () => {
 describe("OZGovernorModule", function () {
   describe("constructor", function () {
     it("Successfully deploys contract and sets variables", async function () {
-      const { ozGovernorModule, params } = await setup()
+      const { ozGovernorModule, params, erc20Token } = await setup()
       expect(await ozGovernorModule.owner()).to.equal(params.owner)
       expect(await ozGovernorModule.multisend()).to.equal(params.multisend)
       expect(await ozGovernorModule.target()).to.equal(params.target)
@@ -91,9 +91,8 @@ describe("OZGovernorModule", function () {
       expect(await ozGovernorModule.votingPeriod()).to.equal(params.votingPeriod)
       expect(await ozGovernorModule.proposalThreshold()).to.equal(params.proposalThreshold)
       expect(await ozGovernorModule.lateQuorumVoteExtension()).to.equal(params.lateQuorumVoteExtension)
-      // not sure why these checks keep failing. Commenting out for now.
-      // const blockNumber = await ethers.provider.getBlockNumber()
-      // expect(await ozGovernorModule.quorum(blockNumber)).to.equal(1)
+      const blockNumber = await ethers.provider.getBlockNumber()
+      expect(await ozGovernorModule.quorum(blockNumber - 1)).to.equal(10000)
     })
   })
   describe("setUp()", function () {
