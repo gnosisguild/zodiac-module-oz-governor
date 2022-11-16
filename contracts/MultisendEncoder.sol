@@ -46,6 +46,7 @@ library MultisendEncoder {
                     )
                 );
             }
+            data = abi.encodeWithSignature("multiSend(bytes)", data);
             operation = Enum.Operation.DelegateCall;
         } else {
             to = targets[0];
