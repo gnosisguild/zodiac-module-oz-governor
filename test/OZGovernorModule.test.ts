@@ -193,9 +193,7 @@ describe("OZGovernorModule", function () {
 
       await ozGovernorModule.castVote(proposalId, 1)
 
-      for (let index = 0; index < 100; index++) {
-        await hre.network.provider.send("evm_mine", [])
-      }
+      await hre.network.provider.send("hardhat_mine", ["0x3C"]);
 
       await ozGovernorModule.execute(
         proposal.targets,
@@ -228,9 +226,7 @@ describe("OZGovernorModule", function () {
 
       await ozGovernorModule.castVote(proposalId, 1)
 
-      for (let index = 0; index < 100; index++) {
-        await hre.network.provider.send("evm_mine", [])
-      }
+      await hre.network.provider.send("hardhat_mine", ["0x3C"]);
 
       await ozGovernorModule.execute(
         proposal.targets,
@@ -263,9 +259,7 @@ describe("OZGovernorModule", function () {
 
       await ozGovernorModule.castVote(proposalId, 1)
 
-      for (let index = 0; index < 100; index++) {
-        await hre.network.provider.send("evm_mine", [])
-      }
+      await hre.network.provider.send("hardhat_mine", ["0x3C"]);
 
       await expect(
         ozGovernorModule.execute(
