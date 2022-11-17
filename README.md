@@ -51,21 +51,18 @@ The "normal deployment" deploys the MyModule contract and the test contracts (`c
 
 The Mastercopy / Minimal Proxy deployment deploys the MyModule mastercopy, a MyModule proxy, and the test contracts (contracts/test/Button.sol and contracts/test/TestAvatar.sol), then sets the TestAvatar as the Button owner and enables the MyModule proxy on the TestAvatar.
 
-### Mastercopy and minimal proxys
+### License
 
-When deploying modules that are going to be used for multiple avatars, it can make sense to use our Mastercopy/Proxy pattern. This deployment uses the Singleton Factory contract (EIP-2470). See a list of supported networks [here](https://blockscan.com/address/0xce0042B868300000d44A59004Da54A005ffdcf9f). For adding support to other chains, check out the documentation [here](https://github.com/gnosis/zodiac/tree/master/src/factory#deployments) and [here](https://eips.ethereum.org/EIPS/eip-2470).
+Created under the [LGPL-3.0+ license](LICENSE).
 
-## Attache your module to a Gnosis Safe
+### Audits
 
-Once you have created a module and want to add it to a Gnosis Safe:
+An audit has been performed by the [G0 group](https://github.com/g0-group).
 
-1. In the Gnosis Safe app, navigate to the "apps" tab and select the Zodiac Safe App.
-2. Select "custom module", enter the address of your newly deployed module, and hit "Add Module".
+All issues and notes of the audit have been addressed in commit [e8281f03779427cd1716e078b712f42473f36e7c](https://github.com/gnosis/zodiac-module-oz-governor/tree/e8281f03779427cd1716e078b712f42473f36e7c/contracts).
 
-It will then show up under Modules and Modifiers in the Gnosis Safe's Zodiac app.
+The audit results are available as a pdf in [this repo](audits/ZodiacOZGovernorModuleModuleNov2022.pdf).
 
-## Helpful links
+### Security and Liability
 
-- [Zodiac Documentation](https://gnosis.github.io/zodiac/docs/intro)
-- [Hardhat](https://hardhat.org/getting-started/)
-- [Hardhat Deploy](https://github.com/wighawag/hardhat-deploy)
+All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
