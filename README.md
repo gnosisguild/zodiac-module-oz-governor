@@ -15,7 +15,7 @@ The OZ Governor Module is an opinionated implementation of [OpenZeppelin's Gover
 This module makes no changes to the existing Governor interface, in order to maintain compatibility with existing applications that support Governor. However, it does modify the behaviour of some existing functions, along with adding some additional functions, to enable it to be more easily used with an avatar.
 
 Specifically, the following changes are important to note:
-1. `_exdcutor()` returns the address stored at `owner`. So all `onlyGovernance()` checks are now equivalent to `onlyOwner()` checks.
+1. `_executor()` returns the address stored at `owner`. So all `onlyGovernance()` checks are now equivalent to `onlyOwner()` checks.
 2. `owner` can be set with `transferOwnership()`. This is important for enabling complex governance setups where the avatar may differ from the account that owns the governor module.
 4. `execute` encodes the provided array of transactions as a delegate call to the [multisend contract](https://github.com/safe-global/safe-contracts/blob/main/contracts/libraries/MultiSend.sol) and triggers a call to `execTransactionFromModule()` on the address stored at `target`. This enables governor to be chained with other modifiers, like the [Delay](https://github.com/gnosis/zodiac-modifier-delay/) or [Roles](https://github.com/gnosis/zodiac-modifier-roles/) modifiers.
 
