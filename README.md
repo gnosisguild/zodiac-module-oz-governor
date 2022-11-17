@@ -40,24 +40,35 @@ yarn deploy
 
 This will deploy a mastercopy for the module, a mastercopy of the ERC20Votes token, a mastercopy of the ERC721Votes token. Then it will deploy a test avatar, and create a minimal proxy for the ERC20 Votes token and set up a minimal proxy for the module (using the test avatar and ERC20 Votes proxy).
 
-For only deploying the mastercopy of the module:
+To deploy the mastercopy of the module:
 
 ```
 yarn deploy --tags moduleMastercopy
 ```
 
-For only deploying the mastercopy of the ERC20 Votes token:
+To deploy the mastercopy of the ERC20 Votes token:
 
 ```
 yarn deploy --tags erc20VotesMastercopy
 ```
 
-For only deploying the mastercopy of the ERC721 Votes token:
+To deploy the mastercopy of the ERC721 Votes token:
 
 ```
 yarn deploy --tags erc721VotesMastercopy
 ```
+### License
 
-- [Zodiac Documentation](https://gnosis.github.io/zodiac/docs/intro)
-- [Hardhat](https://hardhat.org/getting-started/)
-- [Hardhat Deploy](https://github.com/wighawag/hardhat-deploy)
+Created under the [LGPL-3.0+ license](LICENSE).
+
+### Audits
+
+An audit has been performed by the [G0 group](https://github.com/g0-group).
+
+All issues and notes of the audit have been addressed in commit [e8281f03779427cd1716e078b712f42473f36e7c](https://github.com/gnosis/zodiac-module-oz-governor/tree/e8281f03779427cd1716e078b712f42473f36e7c/contracts).
+
+The audit results are available as a pdf in [this repo](audits/ZodiacOZGovernorModuleModuleNov2022.pdf).
+
+### Security and Liability
+
+All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
