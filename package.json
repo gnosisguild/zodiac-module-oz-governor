@@ -1,10 +1,10 @@
 {
-  "name": "zodiac-mod-starter-kit",
-  "version": "0.0.1",
+  "name": "zodiac-module-oz-governor",
+  "version": "1.0.0",
   "description": "Out of the box starting point for building Zodiac modules",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/asgeir-eth/zodiac-mod-starter-kit.git"
+    "url": "git+https://github.com/asgeir-eth/zodiac-module-oz-governor.git"
   },
   "scripts": {
     "build": "hardhat compile",
@@ -27,9 +27,9 @@
   "author": "Gnosis Guild / dOrg",
   "license": "LGPL-3.0",
   "bugs": {
-    "url": "https://github.com/gnosis/zodiac-mod-starter-kit/issues"
+    "url": "https://github.com/gnosis/zodiac-module-oz-governor/issues"
   },
-  "homepage": "https://github.com/gnosis/zodiac-mod-starter-kit",
+  "homepage": "https://github.com/gnosis/zodiac-module-oz-governor",
   "devDependencies": {
     "@gnosis.pm/zodiac": "1.1.9",
     "@nomiclabs/hardhat-ethers": "^2.2.0",
