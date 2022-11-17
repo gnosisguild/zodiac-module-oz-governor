@@ -26,6 +26,11 @@ const config: HardhatUserConfig = {
       url: process.env.GOERLI_URL || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       deploy: ["deploy/mastercopy-proxy"], // deploy via mastercopy and a proxy
+      tags: ["moduleMastercopy"],
+    },
+    hardhat: {
+      deploy: ["deploy/mastercopy-proxy"], // deploy via mastercopy and a proxy
+      tags: ["moduleProxy"],
     },
   },
   namedAccounts: {

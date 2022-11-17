@@ -18,6 +18,9 @@ contract ERC20Votes is
     ERC20PermitUpgradeable,
     ERC20VotesUpgradeable
 {
+    /// @dev Emitted upon successful setup
+    event ERC20VotesSetUp(address indexed owner, string name, string symbol);
+
     constructor(
         address _owner,
         string memory _name,
@@ -42,6 +45,7 @@ contract ERC20Votes is
         __ERC20Permit_init(_name);
         __ERC20Votes_init();
         transferOwnership(_owner);
+        emit ERC20VotesSetUp(_owner, _name, _symbol);
     }
 
     function pause() public onlyOwner {

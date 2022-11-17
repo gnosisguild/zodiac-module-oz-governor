@@ -22,34 +22,41 @@ Specifically, the following changes are important to note:
 **Warning:** Tokens or value MUST NEVER be sent to the address of a deployed instance of this module, as they will be immediately lost. Rather, all value should be stored in the attached avatar (Gnosis Safe).
 
 ## Commands
-
-To see available commands run `yarn hardhat`.
-
-Some helpful commands:
-
 ```
 yarn install # install dependencies
 yarn build # compiles contracts
 yarn coverage # runs the tests and displays contract coverage report
-yarn deploy # deploys the contracts add the `--network` param to select a network
 ```
 
-## Deployment
+#### Deployment
 
-This project is set up to support both a "normal deployment" where the module is deployed directly, along with deployment via the Mastercopy / Minimal Proxy pattern (using our ModuleProxyFactory).
+For each command, the network can be specified by adding the network argument, for instance `--network hardhat`.
 
-Currently, it is set up to deploy via the Mastercopy / Minimal Proxy pattern on Goerli and as a "normal deployment" on other networks. You can easily modify this behavior for your own module.
+For a full test setup run:
 
 ```
-yarn deploy # "normal deployment"
-yarn  deploy --network goerli # deploys a mastercopy and a minimal proxy for the module
+yarn deploy
 ```
 
-The "normal deployment" can be useful for easily deploying and testing your module locally (for instance, the Hardhat Network).
+This will deploy a mastercopy for the module, a mastercopy of the ERC20Votes token, a mastercopy of the ERC721Votes token. Then it will deploy a test avatar, and create a minimal proxy for the ERC20 Votes token and set up a minimal proxy for the module (using the test avatar and ERC20 Votes proxy).
 
-The "normal deployment" deploys the MyModule contract and the test contracts (`contracts/test/Button.sol` and `contracts/test/TestAvatar.sol`), then sets the TestAvatar as the Button owner, and enables MyModule on the TestAvatar.
+To deploy the mastercopy of the module:
 
-The Mastercopy / Minimal Proxy deployment deploys the MyModule mastercopy, a MyModule proxy, and the test contracts (contracts/test/Button.sol and contracts/test/TestAvatar.sol), then sets the TestAvatar as the Button owner and enables the MyModule proxy on the TestAvatar.
+```
+yarn deploy --tags moduleMastercopy
+```
+
+To deploy the mastercopy of the ERC20 Votes token:
+
+```
+yarn deploy --tags erc20VotesMastercopy
+```
+
+To deploy the mastercopy of the ERC721 Votes token:
+
+```
+yarn deploy --tags erc721VotesMastercopy
+```
 
 ### License
 
