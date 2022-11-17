@@ -66,21 +66,21 @@ contract ERC721Votes is
         _safeMint(to, tokenId);
     }
 
-  function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
         internal
         whenNotPaused
         override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
     {
-        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+        super._beforeTokenTransfer(from, to, tokenId);
     }
 
     // The following functions are overrides required by Solidity.
 
-    function _afterTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
+    function _afterTokenTransfer(address from, address to, uint256 tokenId)
         internal
         override(ERC721Upgradeable, ERC721VotesUpgradeable)
     {
-        super._afterTokenTransfer(from, to, tokenId, batchSize);
+        super._afterTokenTransfer(from, to, tokenId);
     }
 
     function supportsInterface(bytes4 interfaceId)
