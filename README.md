@@ -15,57 +15,61 @@ The OZ Governor Module is an opinionated implementation of [OpenZeppelin's Gover
 This module makes no changes to the existing Governor interface, in order to maintain compatibility with existing applications that support Governor. However, it does modify the behaviour of some existing functions, along with adding some additional functions, to enable it to be more easily used with an avatar.
 
 Specifically, the following changes are important to note:
-1. `_exdcutor()` returns the address stored at `owner`. So all `onlyGovernance()` checks are now equivalent to `onlyOwner()` checks.
+1. `_executor()` returns the address stored at `owner`. So all `onlyGovernance()` checks are now equivalent to `onlyOwner()` checks.
 2. `owner` can be set with `transferOwnership()`. This is important for enabling complex governance setups where the avatar may differ from the account that owns the governor module.
 4. `execute` encodes the provided array of transactions as a delegate call to the [multisend contract](https://github.com/safe-global/safe-contracts/blob/main/contracts/libraries/MultiSend.sol) and triggers a call to `execTransactionFromModule()` on the address stored at `target`. This enables governor to be chained with other modifiers, like the [Delay](https://github.com/gnosis/zodiac-modifier-delay/) or [Roles](https://github.com/gnosis/zodiac-modifier-roles/) modifiers.
 
 **Warning:** Tokens or value MUST NEVER be sent to the address of a deployed instance of this module, as they will be immediately lost. Rather, all value should be stored in the attached avatar (Gnosis Safe).
 
 ## Commands
-
-To see available commands run `yarn hardhat`.
-
-Some helpful commands:
-
 ```
 yarn install # install dependencies
 yarn build # compiles contracts
 yarn coverage # runs the tests and displays contract coverage report
-yarn deploy # deploys the contracts add the `--network` param to select a network
 ```
 
-## Deployment
+#### Deployment
 
-This project is set up to support both a "normal deployment" where the module is deployed directly, along with deployment via the Mastercopy / Minimal Proxy pattern (using our ModuleProxyFactory).
+For each command, the network can be specified by adding the network argument, for instance `--network hardhat`.
 
-Currently, it is set up to deploy via the Mastercopy / Minimal Proxy pattern on Goerli and as a "normal deployment" on other networks. You can easily modify this behavior for your own module.
+For a full test setup run:
 
 ```
-yarn deploy # "normal deployment"
-yarn  deploy --network goerli # deploys a mastercopy and a minimal proxy for the module
+yarn deploy
 ```
 
-The "normal deployment" can be useful for easily deploying and testing your module locally (for instance, the Hardhat Network).
+This will deploy a mastercopy for the module, a mastercopy of the ERC20Votes token, a mastercopy of the ERC721Votes token. Then it will deploy a test avatar, and create a minimal proxy for the ERC20 Votes token and set up a minimal proxy for the module (using the test avatar and ERC20 Votes proxy).
 
-The "normal deployment" deploys the MyModule contract and the test contracts (`contracts/test/Button.sol` and `contracts/test/TestAvatar.sol`), then sets the TestAvatar as the Button owner, and enables MyModule on the TestAvatar.
+To deploy the mastercopy of the module:
 
-The Mastercopy / Minimal Proxy deployment deploys the MyModule mastercopy, a MyModule proxy, and the test contracts (contracts/test/Button.sol and contracts/test/TestAvatar.sol), then sets the TestAvatar as the Button owner and enables the MyModule proxy on the TestAvatar.
+```
+yarn deploy --tags moduleMastercopy
+```
 
-### Mastercopy and minimal proxys
+To deploy the mastercopy of the ERC20 Votes token:
 
-When deploying modules that are going to be used for multiple avatars, it can make sense to use our Mastercopy/Proxy pattern. This deployment uses the Singleton Factory contract (EIP-2470). See a list of supported networks [here](https://blockscan.com/address/0xce0042B868300000d44A59004Da54A005ffdcf9f). For adding support to other chains, check out the documentation [here](https://github.com/gnosis/zodiac/tree/master/src/factory#deployments) and [here](https://eips.ethereum.org/EIPS/eip-2470).
+```
+yarn deploy --tags erc20VotesMastercopy
+```
 
-## Attache your module to a Gnosis Safe
+To deploy the mastercopy of the ERC721 Votes token:
 
-Once you have created a module and want to add it to a Gnosis Safe:
+```
+yarn deploy --tags erc721VotesMastercopy
+```
 
-1. In the Gnosis Safe app, navigate to the "apps" tab and select the Zodiac Safe App.
-2. Select "custom module", enter the address of your newly deployed module, and hit "Add Module".
+### License
 
-It will then show up under Modules and Modifiers in the Gnosis Safe's Zodiac app.
+Created under the [LGPL-3.0+ license](LICENSE).
 
-## Helpful links
+### Audits
 
-- [Zodiac Documentation](https://gnosis.github.io/zodiac/docs/intro)
-- [Hardhat](https://hardhat.org/getting-started/)
-- [Hardhat Deploy](https://github.com/wighawag/hardhat-deploy)
+An audit has been performed by the [G0 group](https://github.com/g0-group).
+
+All issues and notes of the audit have been addressed in commit [e8281f03779427cd1716e078b712f42473f36e7c](https://github.com/gnosis/zodiac-module-oz-governor/tree/e8281f03779427cd1716e078b712f42473f36e7c/contracts).
+
+The audit results are available as a pdf in [this repo](audits/ZodiacOZGovernorModuleModuleNov2022.pdf).
+
+### Security and Liability
+
+All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

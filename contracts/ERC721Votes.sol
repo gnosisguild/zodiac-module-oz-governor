@@ -25,6 +25,9 @@ contract ERC721Votes is
 
     CountersUpgradeable.Counter private _tokenIdCounter;
 
+    /// @dev Emitted upon successful setup
+    event ERC721VotesSetUp(address indexed owner, string name, string symbol);
+
     constructor(
         address _owner,
         string memory _name,
@@ -50,6 +53,7 @@ contract ERC721Votes is
         __ERC721Votes_init();
 
         transferOwnership(_owner);
+        emit ERC721VotesSetUp(_owner, _name, _symbol);
     }
 
     function pause() public onlyOwner {
