@@ -175,9 +175,10 @@ contract OZGovernorModule is
         uint256 proposalId,
         address account,
         uint8 support,
-        string memory reason
+        string memory reason,
+        bytes memory params
     ) internal virtual override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable) returns (uint256) {
-        return GovernorPreventLateQuorumUpgradeable._castVote(proposalId, account, support, reason);
+        return GovernorPreventLateQuorumUpgradeable._castVote(proposalId, account, support, reason, params);
     }
 
     function proposalDeadline(uint256 proposalId)
