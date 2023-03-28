@@ -157,7 +157,7 @@ contract OZGovernorModule is
 
     /// @dev Returns this module's version.
     function version() public pure override returns (string memory) {
-        return "Zodaic OZ Governor Module: v1.0.0";
+        return "Zodiac OZ Governor Module: v1.0.0";
     }
 
     /// The following functions are overrides required by Solidity.
