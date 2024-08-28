@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.9;
 
-import "@gnosis.pm/zodiac/contracts/interfaces/IAvatar.sol";
+import "@gnosis-guild/zodiac-core/contracts/interfaces/IAvatar.sol";
 import "./MultisendEncoder.sol";
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
@@ -107,7 +107,7 @@ contract OZGovernorModule is
 
     /// @dev Execute via a Zodiac avatar, like a Gnosis Safe.
     function _execute(
-        uint256, /* proposalId */
+        uint256 /* proposalId */,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
@@ -175,19 +175,15 @@ contract OZGovernorModule is
         uint256 proposalId,
         address account,
         uint8 support,
-        string memory reason
+        string memory reason,
+        bytes memory params
     ) internal virtual override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable) returns (uint256) {
-        return GovernorPreventLateQuorumUpgradeable._castVote(proposalId, account, support, reason);
+        return GovernorPreventLateQuorumUpgradeable._castVote(proposalId, account, support, reason, params);
     }
 
-    function proposalDeadline(uint256 proposalId)
-        public
-        view
-        virtual
-        override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable)
-        returns (uint256)
-    {
+    function proposalDeadline(
+        uint256 proposalId
+    ) public view virtual override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable) returns (uint256) {
         return GovernorPreventLateQuorumUpgradeable.proposalDeadline(proposalId);
     }
-
 }
