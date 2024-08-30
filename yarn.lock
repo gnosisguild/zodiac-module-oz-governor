@@ -309,10 +309,10 @@
   resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-2.1.1.tgz#b9da6a878a371829a0502c9b6c1c143ef6663f4d"
   integrity sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==
 
-"@gnosis-guild/zodiac-core@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@gnosis-guild/zodiac-core/-/zodiac-core-2.0.1.tgz#07226e77e09e2ac8faf2ed21fe1dcb8d18a796bb"
-  integrity sha512-R3K4DLjkbGdUXy3USLaciQwSJzcFaKcxiua4it8fT84wydN+auRs3DIcHLZdiL5yEWXv5yFPcXoCex8Ecc/SHw==
+"@gnosis-guild/zodiac-core@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@gnosis-guild/zodiac-core/-/zodiac-core-2.0.2.tgz#da1977ba25edadf9b53a493502de23ab286ae239"
+  integrity sha512-pXfOklaUVDZ7XqbbZgYnIHE5xk5S4DL4b8Xn6IrxHZt8xL15A1GhFOTjIlg8xiNz+HkgM96ncUti4Vh2ZJysog==
   dependencies:
     "@gnosis.pm/safe-contracts" "1.3.0"
     "@openzeppelin/contracts" "5.0.2"
@@ -4486,9 +4486,9 @@ solhint@5.0.3:
     prettier "^2.8.3"
 
 solidity-coverage@^0.8.12:
-  version "0.8.12"
-  resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.8.12.tgz#c4fa2f64eff8ada7a1387b235d6b5b0e6c6985ed"
-  integrity sha512-8cOB1PtjnjFRqOgwFiD8DaUsYJtVJ6+YdXQtSZDrLGf8cdhhh8xzTtGzVTGeBf15kTv0v7lYPJlV/az7zLEPJw==
+  version "0.8.13"
+  resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.8.13.tgz#8eeada2e82ae19d25568368aa782a2baad0e0ce7"
+  integrity sha512-RiBoI+kF94V3Rv0+iwOj3HQVSqNzA9qm/qDP1ZDXK5IX0Cvho1qiz8hAXTsAo6KOIUeP73jfscq0KlLqVxzGWA==
   dependencies:
     "@ethersproject/abi" "^5.0.9"
     "@solidity-parser/parser" "^0.18.0"
@@ -4930,9 +4930,9 @@ typical@^5.2.0:
   integrity sha512-dvdQgNDNJo+8B2uBQoqdb11eUCE1JQXhvjC/CZtgvZseVd5TYMXnq0+vuUemXbd/Se29cTaUuPX3YIc2xgbvIg==
 
 uglify-js@^3.1.4:
-  version "3.19.2"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.19.2.tgz#319ae26a5fbd18d03c7dc02496cfa1d6f1cd4307"
-  integrity sha512-S8KA6DDI47nQXJSi2ctQ629YzwOVs+bQML6DAtvy0wgNdpi+0ySpQK0g2pxBq2xfF2z3YCscu7NNA8nXT9PlIQ==
+  version "3.19.3"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.19.3.tgz#82315e9bbc6f2b25888858acd1fff8441035b77f"
+  integrity sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==
 
 unbox-primitive@^1.0.2:
   version "1.0.2"

@@ -13,8 +13,10 @@ const setup = async () => {
     symbol: "TKN",
   }
   const erc721Token = await ERC721Votes.deploy(params.owner, params.name, params.symbol)
+  await erc721Token.waitForDeployment()
   const ModuleProxyFactory = await ethers.getContractFactory("ModuleProxyFactory")
   const moduleProxyFactory = await ModuleProxyFactory.deploy()
+  await moduleProxyFactory.waitForDeployment()
   return {
     wallet,
     erc721Token,
@@ -36,21 +38,27 @@ describe("ERC721Votes", function () {
   describe("setUp()", function () {
     it("Initializes a proxy deployment", async function () {
       const { erc721Token, params, paramTypes, moduleProxyFactory } = await setup()
-      const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [params.owner, params.name, params.symbol])
+      const initData = ethers.AbiCoder.defaultAbiCoder().encode(paramTypes, [params.owner, params.name, params.symbol])
 
-      const initParams = (await erc721Token.populateTransaction.setUp(initData)).data
+      const initParams = (await erc721Token.setUp.populateTransaction(initData)).data
       if (!initParams) {
         throw console.error("error")
       }
 
-      const receipt = await moduleProxyFactory
-        .deployModule(erc721Token.address, initParams, 0)
-        .then((tx: any) => tx.wait())
-
-      // retrieve new address from event
-      const {
-        args: [newProxyAddress],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
+      const tx = await moduleProxyFactory.deployModule(await erc721Token.getAddress(), initParams, 0)
+      const receipt = await tx.wait()
+      const event = receipt.logs.find((log: { topics: ReadonlyArray<string>; data: string }) => {
+        try {
+          const parsedLog = moduleProxyFactory.interface.parseLog(log)
+          return parsedLog?.name === "ModuleProxyCreation"
+        } catch (e) {
+          return false
+        }
+      })
+      if (!event) {
+        throw new Error("ModuleProxyCreation event not found")
+      }
+      const [newProxyAddress] = event.args || []
 
       const moduleProxy = await ethers.getContractAt("ERC721Votes", newProxyAddress)
       expect(await moduleProxy.owner()).to.equal(params.owner)
@@ -60,21 +68,27 @@ describe("ERC721Votes", function () {
 
     it("Should fail if setup is called more than once", async function () {
       const { erc721Token, params, paramTypes, moduleProxyFactory } = await setup()
-      const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [params.owner, params.name, params.symbol])
+      const initData = ethers.AbiCoder.defaultAbiCoder().encode(paramTypes, [params.owner, params.name, params.symbol])
 
-      const initParams = (await erc721Token.populateTransaction.setUp(initData)).data
+      const initParams = (await erc721Token.setUp.populateTransaction(initData)).data
       if (!initParams) {
         throw console.error("error")
       }
 
-      const receipt = await moduleProxyFactory
-        .deployModule(erc721Token.address, initParams, 0)
-        .then((tx: any) => tx.wait())
-
-      // retrieve new address from event
-      const {
-        args: [newProxyAddress],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
+      const tx = await moduleProxyFactory.deployModule(await erc721Token.getAddress(), initParams, 0)
+      const receipt = await tx.wait()
+      const event = receipt.logs.find((log: { topics: ReadonlyArray<string>; data: string }) => {
+        try {
+          const parsedLog = moduleProxyFactory.interface.parseLog(log)
+          return parsedLog?.name === "ModuleProxyCreation"
+        } catch (e) {
+          return false
+        }
+      })
+      if (!event) {
+        throw new Error("ModuleProxyCreation event not found")
+      }
+      const [newProxyAddress] = event.args || []
 
       const moduleProxy = await ethers.getContractAt("ERC721Votes", newProxyAddress)
       expect(await moduleProxy.owner()).to.equal(params.owner)

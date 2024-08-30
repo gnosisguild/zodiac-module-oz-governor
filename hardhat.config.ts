@@ -1,21 +1,19 @@
-/* eslint-disable node/no-unsupported-features/es-syntax */
-
-import "@nomicfoundation/hardhat-toolbox"
-import "@nomicfoundation/hardhat-verify"
-import "hardhat-gas-reporter"
-import "solidity-coverage"
-import * as dotenv from "dotenv"
-import type { HttpNetworkUserConfig } from "hardhat/types"
-// import "@nomiclabs/hardhat-etherscan"
-// import "@nomiclabs/hardhat-ethers"
-// import "@nomiclabs/hardhat-waffle"
-// import "@typechain/hardhat"
-// import "hardhat-gas-reporter"
-// import "solidity-coverage"
-// import "hardhat-deploy"
-// import "hardhat-contract-sizer"
+import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
+import "@nomicfoundation/hardhat-ethers";
+import "hardhat-gas-reporter";
+import "solidity-coverage";
+import dotenv from "dotenv";
+import type { HttpNetworkUserConfig } from "hardhat/types";
 
 dotenv.config()
+
+import "./tasks/reconstruct-mastercopy"
+import "./tasks/deploy-mastercopies"
+import "./tasks/deploy-mastercopy"
+import "./tasks/extract-mastercopy"
+import "./tasks/verify-mastercopies"
+import "./tasks/verify-mastercopy"
 
 const DEFAULT_MNEMONIC = "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat"
 
@@ -36,11 +34,11 @@ const config = {
     sources: "contracts",
   },
   solidity: {
-    compilers: [{ version: "0.8.9" }],
+    compilers: [{ version: "0.8.9" }, { version: "0.8.4" }],
     settings: {
       optimizer: {
         enabled: true,
-        runs: 1,
+        runs: 200,
       },
     },
   },
@@ -49,10 +47,6 @@ const config = {
     mainnet: {
       ...sharedNetworkConfig,
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
-    },
-    goerli: {
-      ...sharedNetworkConfig,
-      url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
     },
     gnosis: {
       ...sharedNetworkConfig,
