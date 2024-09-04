@@ -1,20 +1,27 @@
 import { expect } from "chai"
 import hre, { ethers } from "hardhat"
+import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core"
+import createAdapter from "./createEIP1193"
+
+const saltNonce = "0xfa"
 const AddressOne = "0x0000000000000000000000000000000000000001"
 
 const abiCoder = ethers.AbiCoder.defaultAbiCoder()
 
 const setup = async () => {
-  // const { tester } = await getNamedAccounts()
-  // const testSigner = await ethers.getSigner(tester)
-  const [wallet] = await ethers.getSigners()
+  const [wallet, deployer] = await ethers.getSigners()
+  const eip1193Provider = createAdapter({
+    provider: hre.network.provider,
+    signer: deployer,
+  })
   const Avatar = await ethers.getContractFactory("TestAvatar")
   const avatar = await Avatar.deploy()
 
   const Multisend = await ethers.getContractFactory("MultiSend")
   const multisend = await Multisend.deploy()
 
-  // TODO: not sure why, but this line is printing "[Warning] Invalid Fragment" in the console
+  // TODO: not sure why, but this line is printing "[Warning] Invalid Fragment" in the console (issue with typechain and ethers v6)
+  // TODO: https://github.com/dethcrypto/TypeChain/pull/887
   const MultisendEncoder = await ethers.getContractFactory("MultisendEncoder")
 
   const multisendEncoder = await MultisendEncoder.deploy()
@@ -42,6 +49,7 @@ const setup = async () => {
     "uint256",
     "uint64",
   ]
+  await deployFactories({ provider: eip1193Provider })
   const params = {
     owner: await avatar.getAddress(),
     target: await avatar.getAddress(),
@@ -69,20 +77,17 @@ const setup = async () => {
   )
   await ozGovernorModule.waitForDeployment()
   await avatar.enableModule(await ozGovernorModule.getAddress())
-  const ModuleProxyFactory = await ethers.getContractFactory("ModuleProxyFactory")
-  const moduleProxyFactory = await ModuleProxyFactory.deploy()
-  await moduleProxyFactory.waitForDeployment()
 
   return {
     avatar,
     multisend,
-    moduleProxyFactory,
     ozGovernorModule,
     params,
     paramTypes,
     wallet,
     erc20Token,
     multisendEncoder,
+    eip1193Provider,
   }
 }
 
@@ -112,44 +117,27 @@ describe("OZGovernorModule", function () {
   })
   describe("setUp()", function () {
     it("Initializes a proxy deployment", async function () {
-      const { moduleProxyFactory, ozGovernorModule, params, paramTypes, wallet } = await setup()
-      const initData = abiCoder.encode(paramTypes, [
-        params.owner,
-        params.target,
-        params.multisend,
-        params.token,
-        params.name,
-        params.votingDelay,
-        params.votingPeriod,
-        params.proposalThreshold,
-        params.quorum,
-        params.lateQuorumVoteExtension,
-      ])
-
-      const initParams = (await ozGovernorModule.setUp.populateTransaction(initData)).data
-      if (!initParams) {
-        throw console.error("error")
-      }
-
-      const receipt = await moduleProxyFactory
-        .deployModule(await ozGovernorModule.getAddress(), initParams, 0)
-        .then((tx: any) => tx.wait())
-
-      const parsedLogs = receipt.logs.map((log: any) => {
-        try {
-          return moduleProxyFactory.interface.parseLog(log)
-        } catch (error) {
-          return null
-        }
+      const { eip1193Provider, ozGovernorModule, params, paramTypes, wallet } = await setup()
+      const { address: newProxyAddress } = await deployProxy({
+        mastercopy: await ozGovernorModule.getAddress(),
+        setupArgs: {
+          types: paramTypes,
+          values: [
+            params.owner,
+            params.target,
+            params.multisend,
+            params.token,
+            params.name,
+            params.votingDelay,
+            params.votingPeriod,
+            params.proposalThreshold,
+            params.quorum,
+            params.lateQuorumVoteExtension,
+          ],
+        },
+        saltNonce,
+        provider: eip1193Provider,
       })
-
-      const event = parsedLogs.find((log: any) => log && log.name === "ModuleProxyCreation")
-
-      // retrieve new address from event
-      const {
-        args: [newProxyAddress],
-      } = event
-
       const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
       expect(await moduleProxy.owner()).to.equal(params.owner)
       const functionFragment = ozGovernorModule.interface.getFunction("target")
@@ -170,8 +158,8 @@ describe("OZGovernorModule", function () {
     })
 
     it("Should fail if setup is called more than once", async function () {
-      const { moduleProxyFactory, ozGovernorModule, params, paramTypes } = await setup()
-      const initData = abiCoder.encode(paramTypes, [
+      const { eip1193Provider, ozGovernorModule, params, paramTypes } = await setup()
+      const initialValues = [
         params.owner,
         params.target,
         params.multisend,
@@ -182,31 +170,23 @@ describe("OZGovernorModule", function () {
         params.proposalThreshold,
         params.quorum,
         params.lateQuorumVoteExtension,
-      ])
+      ]
+      const initData = abiCoder.encode(paramTypes, initialValues)
 
       const initParams = (await ozGovernorModule.setUp.populateTransaction(initData)).data
       if (!initParams) {
         throw console.error("error")
       }
 
-      const receipt = await moduleProxyFactory
-        .deployModule(await ozGovernorModule.getAddress(), initParams, 0)
-        .then((tx: any) => tx.wait())
-
-      const parsedLogs = receipt.logs.map((log: any) => {
-        try {
-          return moduleProxyFactory.interface.parseLog(log)
-        } catch (error) {
-          return null
-        }
+      const { address: newProxyAddress } = await deployProxy({
+        mastercopy: await ozGovernorModule.getAddress(),
+        setupArgs: {
+          types: paramTypes,
+          values: initialValues,
+        },
+        saltNonce,
+        provider: eip1193Provider,
       })
-
-      const event = parsedLogs.find((log: any) => log && log.name === "ModuleProxyCreation")
-
-      // retrieve new address from event
-      const {
-        args: [newProxyAddress],
-      } = event
 
       const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
       expect(moduleProxy.setUp(initParams)).to.be.revertedWith("Initializable: contract is already initialized")
