@@ -1,10 +1,11 @@
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-verify";
-import "@nomicfoundation/hardhat-ethers";
-import "hardhat-gas-reporter";
-import "solidity-coverage";
-import dotenv from "dotenv";
-import type { HttpNetworkUserConfig } from "hardhat/types";
+import "@nomicfoundation/hardhat-toolbox"
+import "@nomicfoundation/hardhat-verify"
+import "@nomicfoundation/hardhat-ethers"
+import "hardhat-contract-sizer"
+import "hardhat-gas-reporter"
+import "solidity-coverage"
+import dotenv from "dotenv"
+import type { HttpNetworkUserConfig } from "hardhat/types"
 
 dotenv.config()
 
@@ -34,12 +35,13 @@ const config = {
     sources: "contracts",
   },
   solidity: {
-    compilers: [{ version: "0.8.9" }, { version: "0.8.4" }],
+    version: "0.8.20",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 2 ** 32 - 1,
       },
+      viaIR: true,
     },
   },
   networks: {

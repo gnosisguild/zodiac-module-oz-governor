@@ -87,7 +87,7 @@ describe("ERC20Votes", function () {
       if (!event) {
         throw new Error("ModuleProxyCreation event not found")
       }
-      const [newProxyAddress] = event.args || [] 
+      const [newProxyAddress] = event.args || []
       const moduleProxy = await ethers.getContractAt("ERC20Votes", newProxyAddress)
       expect(await moduleProxy.owner()).to.equal(params.owner)
       expect(await moduleProxy.name()).to.equal(params.name)
