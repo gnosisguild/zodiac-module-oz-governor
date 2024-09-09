@@ -1,5 +1,5 @@
 import { task } from "hardhat/config"
-import { ethers, ZeroHash } from "ethers"
+import { ZeroHash } from "ethers"
 
 import { writeMastercopyFromBuild } from "@gnosis-guild/zodiac-core"
 
@@ -69,16 +69,16 @@ task("extract:mastercopy", "Extracts and persists current mastercopy build artif
         "uint64",
       ],
       values: [
-        "0x0000000000000000000000000000000000000001",
-        "0x0000000000000000000000000000000000000001",
-        "0x0000000000000000000000000000000000000001",
-        "0x0000000000000000000000000000000000000001",
+        AddressOne,
+        AddressOne,
+        AddressOne,
+        "0x9a73aE387eb97EF59765bd13ECF1E37f28515b70",
         "",
-        "0x0000000000000000000000000000000000000001",
-        "0x0000000000000000000000000000000000000001",
-        "0x0000000000000000000000000000000000000001",
-        "0x0000000000000000000000000000000000000001",
-        "0x0000000000000000000000000000000000000001",
+        0,
+        100,
+        0,
+        0,
+        0,
       ],
     },
     salt: "0x0000000000000000000000000000000000000000000000000000000000000000",

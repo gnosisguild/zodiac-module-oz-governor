@@ -9,7 +9,6 @@ import type { HttpNetworkUserConfig } from "hardhat/types"
 
 dotenv.config()
 
-import "./tasks/reconstruct-mastercopy"
 import "./tasks/deploy-mastercopies"
 import "./tasks/deploy-mastercopy"
 import "./tasks/extract-mastercopy"
