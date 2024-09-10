@@ -38,10 +38,13 @@ const config = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 2 ** 32 - 1,
+        runs: 10000,
       },
       viaIR: true,
     },
+  },
+  sourcify: {
+    enabled: true,
   },
   networks: {
     hardhat: { tags: ["moduleProxy"] },
