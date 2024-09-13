@@ -8,7 +8,7 @@ import packageJson from "../package.json"
 const AddressOne = "0x0000000000000000000000000000000000000001"
 
 task("extract:mastercopy", "Extracts and persists current mastercopy build artifacts").setAction(async (_, hre) => {
-  writeMastercopyFromBuild({
+  const { address: erc20VotesAddress } = writeMastercopyFromBuild({
     contractVersion: packageJson.version,
     contractName: "ERC20Votes",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
@@ -68,18 +68,7 @@ task("extract:mastercopy", "Extracts and persists current mastercopy build artif
         "uint256",
         "uint64",
       ],
-      values: [
-        AddressOne,
-        AddressOne,
-        AddressOne,
-        "0x9a73aE387eb97EF59765bd13ECF1E37f28515b70",
-        "",
-        0,
-        100,
-        0,
-        0,
-        0,
-      ],
+      values: [AddressOne, AddressOne, AddressOne, erc20VotesAddress, "", 0, 100, 0, 0, 0],
     },
     salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
   })
