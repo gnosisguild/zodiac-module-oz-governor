@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -28,11 +28,7 @@ contract ERC721Votes is
     /// @dev Emitted upon successful setup
     event ERC721VotesSetUp(address indexed owner, string name, string symbol);
 
-    constructor(
-        address _owner,
-        string memory _name,
-        string memory _symbol
-    ) {
+    constructor(address _owner, string memory _name, string memory _symbol) {
         bytes memory initializeParams = abi.encode(_owner, _name, _symbol);
         setUp(initializeParams);
     }
@@ -73,9 +69,10 @@ contract ERC721Votes is
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 batchSize
     ) internal override(ERC721Upgradeable, ERC721EnumerableUpgradeable) whenNotPaused {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
     // The following functions are overrides required by Solidity.
@@ -83,17 +80,15 @@ contract ERC721Votes is
     function _afterTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 batchSize
     ) internal override(ERC721Upgradeable, ERC721VotesUpgradeable) {
-        super._afterTokenTransfer(from, to, tokenId);
+        super._afterTokenTransfer(from, to, tokenId, batchSize);
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721Upgradeable, ERC721EnumerableUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

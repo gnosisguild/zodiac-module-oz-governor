@@ -1,10 +1,17 @@
 import { expect } from "chai"
-import { ethers } from "hardhat"
+import hre, { ethers } from "hardhat"
+import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core"
+import createAdapter from "./createEIP1193"
+
+const saltNonce = "0xfa"
 
 const setup = async () => {
-  // const { tester } = await getNamedAccounts()
-  // const testSigner = await ethers.getSigner(tester)
-  const [wallet] = await ethers.getSigners()
+  const [wallet, deployer] = await ethers.getSigners()
+  const eip1193Provider = createAdapter({
+    provider: hre.network.provider,
+    signer: deployer,
+  })
+
   const ERC20Votes = await ethers.getContractFactory("ERC20Votes")
   const paramTypes = ["address", "string", "string"]
   const params = {
@@ -13,14 +20,14 @@ const setup = async () => {
     symbol: "TKN",
   }
   const erc20Token = await ERC20Votes.deploy(params.owner, params.name, params.symbol)
-  const ModuleProxyFactory = await ethers.getContractFactory("ModuleProxyFactory")
-  const moduleProxyFactory = await ModuleProxyFactory.deploy()
+  await erc20Token.waitForDeployment()
+  await deployFactories({ provider: eip1193Provider })
   return {
     wallet,
     erc20Token,
     params,
     paramTypes,
-    moduleProxyFactory,
+    eip1193Provider,
   }
 }
 
@@ -35,23 +42,16 @@ describe("ERC20Votes", function () {
   })
   describe("setUp()", function () {
     it("Initializes a proxy deployment", async function () {
-      const { erc20Token, params, paramTypes, moduleProxyFactory } = await setup()
-      const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [params.owner, params.name, params.symbol])
-
-      const initParams = (await erc20Token.populateTransaction.setUp(initData)).data
-      if (!initParams) {
-        throw console.error("error")
-      }
-
-      const receipt = await moduleProxyFactory
-        .deployModule(erc20Token.address, initParams, 0)
-        .then((tx: any) => tx.wait())
-
-      // retrieve new address from event
-      const {
-        args: [newProxyAddress],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
-
+      const { erc20Token, params, paramTypes, eip1193Provider } = await setup()
+      const { address: newProxyAddress } = await deployProxy({
+        mastercopy: await erc20Token.getAddress(),
+        setupArgs: {
+          types: paramTypes,
+          values: [params.owner, params.name, params.symbol],
+        },
+        saltNonce,
+        provider: eip1193Provider,
+      })
       const moduleProxy = await ethers.getContractAt("ERC20Votes", newProxyAddress)
       expect(await moduleProxy.owner()).to.equal(params.owner)
       expect(await moduleProxy.name()).to.equal(params.name)
@@ -59,23 +59,23 @@ describe("ERC20Votes", function () {
     })
 
     it("Should fail if setup is called more than once", async function () {
-      const { erc20Token, params, paramTypes, moduleProxyFactory } = await setup()
-      const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [params.owner, params.name, params.symbol])
+      const { erc20Token, params, paramTypes, eip1193Provider } = await setup()
+      const initData = ethers.AbiCoder.defaultAbiCoder().encode(paramTypes, [params.owner, params.name, params.symbol])
 
-      const initParams = (await erc20Token.populateTransaction.setUp(initData)).data
+      const initParams = (await erc20Token.setUp.populateTransaction(initData)).data
       if (!initParams) {
         throw console.error("error")
       }
 
-      const receipt = await moduleProxyFactory
-        .deployModule(erc20Token.address, initParams, 0)
-        .then((tx: any) => tx.wait())
-
-      // retrieve new address from event
-      const {
-        args: [newProxyAddress],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
-
+      const { address: newProxyAddress } = await deployProxy({
+        mastercopy: await erc20Token.getAddress(),
+        setupArgs: {
+          types: paramTypes,
+          values: [params.owner, params.name, params.symbol],
+        },
+        saltNonce,
+        provider: eip1193Provider,
+      })
       const moduleProxy = await ethers.getContractAt("ERC20Votes", newProxyAddress)
       expect(await moduleProxy.owner()).to.equal(params.owner)
       expect(await moduleProxy.name()).to.equal(params.name)

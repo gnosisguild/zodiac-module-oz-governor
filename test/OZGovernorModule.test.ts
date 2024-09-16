@@ -1,28 +1,40 @@
 import { expect } from "chai"
-import { PopulatedTransaction } from "ethers"
 import hre, { ethers } from "hardhat"
+import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core"
+import createAdapter from "./createEIP1193"
+
+const saltNonce = "0xfa"
 const AddressOne = "0x0000000000000000000000000000000000000001"
 
+const abiCoder = ethers.AbiCoder.defaultAbiCoder()
+
 const setup = async () => {
-  // const { tester } = await getNamedAccounts()
-  // const testSigner = await ethers.getSigner(tester)
-  const [wallet] = await ethers.getSigners()
+  const [wallet, deployer] = await ethers.getSigners()
+  const eip1193Provider = createAdapter({
+    provider: hre.network.provider,
+    signer: deployer,
+  })
   const Avatar = await ethers.getContractFactory("TestAvatar")
   const avatar = await Avatar.deploy()
+
   const Multisend = await ethers.getContractFactory("MultiSend")
   const multisend = await Multisend.deploy()
+
+  // TODO: not sure why, but this line is printing "[Warning] Invalid Fragment" in the console (issue with typechain and ethers v6)
+  // TODO: https://github.com/dethcrypto/TypeChain/pull/887
   const MultisendEncoder = await ethers.getContractFactory("MultisendEncoder")
+
   const multisendEncoder = await MultisendEncoder.deploy()
   const ERC20Votes = await ethers.getContractFactory("ERC20Votes")
   const erc20Token = await ERC20Votes.deploy(wallet.address, "Token", "TKN")
 
   await erc20Token.mint(wallet.address, 1000000)
   await erc20Token.delegate(wallet.address)
-  await erc20Token.transfer(avatar.address, 100000)
+  await erc20Token.transfer(await avatar.getAddress(), 100000)
 
   const OZGovernorModuleFactory = await ethers.getContractFactory("OZGovernorModule", {
     libraries: {
-      MultisendEncoder: multisendEncoder.address,
+      MultisendEncoder: await multisendEncoder.getAddress(),
     },
   })
   const paramTypes = [
@@ -37,11 +49,12 @@ const setup = async () => {
     "uint256",
     "uint64",
   ]
+  await deployFactories({ provider: eip1193Provider })
   const params = {
-    owner: avatar.address,
-    target: avatar.address,
-    multisend: multisend.address,
-    token: erc20Token.address,
+    owner: await avatar.getAddress(),
+    target: await avatar.getAddress(),
+    multisend: await multisend.getAddress(),
+    token: await erc20Token.getAddress(),
     name: "Test Governor",
     votingDelay: 0,
     votingPeriod: 60,
@@ -49,6 +62,7 @@ const setup = async () => {
     quorum: 1,
     lateQuorumVoteExtension: 10,
   }
+
   const ozGovernorModule = await OZGovernorModuleFactory.deploy(
     params.owner,
     params.target,
@@ -61,30 +75,36 @@ const setup = async () => {
     params.quorum,
     params.lateQuorumVoteExtension,
   )
-  await avatar.enableModule(ozGovernorModule.address)
-  const ModuleProxyFactory = await ethers.getContractFactory("ModuleProxyFactory")
-  const moduleProxyFactory = await ModuleProxyFactory.deploy()
+  await ozGovernorModule.waitForDeployment()
+  await avatar.enableModule(await ozGovernorModule.getAddress())
 
   return {
     avatar,
     multisend,
-    moduleProxyFactory,
     ozGovernorModule,
     params,
     paramTypes,
     wallet,
     erc20Token,
     multisendEncoder,
+    eip1193Provider,
   }
 }
 
 describe("OZGovernorModule", function () {
   describe("constructor", function () {
     it("Successfully deploys contract and sets variables", async function () {
-      const { ozGovernorModule, params } = await setup()
+      const { ozGovernorModule, params, wallet } = await setup()
       expect(await ozGovernorModule.owner()).to.equal(params.owner)
       expect(await ozGovernorModule.multisend()).to.equal(params.multisend)
-      expect(await ozGovernorModule.target()).to.equal(params.target)
+      const functionFragment = ozGovernorModule.interface.getFunction("target")
+      const functionSelector = functionFragment.selector
+      const result = await wallet.call({
+        to: await ozGovernorModule.getAddress(),
+        data: functionSelector,
+      })
+      const decodedResult = ozGovernorModule.interface.decodeFunctionResult("target", result)
+      expect(decodedResult[0]).to.equal(params.target)
       expect(await ozGovernorModule.token()).to.equal(params.token)
       expect(await ozGovernorModule.name()).to.equal(params.name)
       expect(await ozGovernorModule.votingDelay()).to.equal(params.votingDelay)
@@ -97,37 +117,37 @@ describe("OZGovernorModule", function () {
   })
   describe("setUp()", function () {
     it("Initializes a proxy deployment", async function () {
-      const { moduleProxyFactory, ozGovernorModule, params, paramTypes } = await setup()
-      const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [
-        params.owner,
-        params.target,
-        params.multisend,
-        params.token,
-        params.name,
-        params.votingDelay,
-        params.votingPeriod,
-        params.proposalThreshold,
-        params.quorum,
-        params.lateQuorumVoteExtension,
-      ])
-
-      const initParams = (await ozGovernorModule.populateTransaction.setUp(initData)).data
-      if (!initParams) {
-        throw console.error("error")
-      }
-
-      const receipt = await moduleProxyFactory
-        .deployModule(ozGovernorModule.address, initParams, 0)
-        .then((tx: any) => tx.wait())
-
-      // retrieve new address from event
-      const {
-        args: [newProxyAddress],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
-
+      const { eip1193Provider, ozGovernorModule, params, paramTypes, wallet } = await setup()
+      const { address: newProxyAddress } = await deployProxy({
+        mastercopy: await ozGovernorModule.getAddress(),
+        setupArgs: {
+          types: paramTypes,
+          values: [
+            params.owner,
+            params.target,
+            params.multisend,
+            params.token,
+            params.name,
+            params.votingDelay,
+            params.votingPeriod,
+            params.proposalThreshold,
+            params.quorum,
+            params.lateQuorumVoteExtension,
+          ],
+        },
+        saltNonce,
+        provider: eip1193Provider,
+      })
       const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
       expect(await moduleProxy.owner()).to.equal(params.owner)
-      expect(await moduleProxy.target()).to.equal(params.target)
+      const functionFragment = ozGovernorModule.interface.getFunction("target")
+      const functionSelector = functionFragment.selector
+      const result = await wallet.call({
+        to: await ozGovernorModule.getAddress(),
+        data: functionSelector,
+      })
+      const decodedResult = ozGovernorModule.interface.decodeFunctionResult("target", result)
+      expect(decodedResult[0]).to.equal(params.target)
       expect(await moduleProxy.multisend()).to.equal(params.multisend)
       expect(await moduleProxy.token()).to.equal(params.token)
       expect(await moduleProxy.name()).to.equal(params.name)
@@ -138,8 +158,8 @@ describe("OZGovernorModule", function () {
     })
 
     it("Should fail if setup is called more than once", async function () {
-      const { moduleProxyFactory, ozGovernorModule, params, paramTypes } = await setup()
-      const initData = await ethers.utils.defaultAbiCoder.encode(paramTypes, [
+      const { eip1193Provider, ozGovernorModule, params, paramTypes } = await setup()
+      const initialValues = [
         params.owner,
         params.target,
         params.multisend,
@@ -150,21 +170,23 @@ describe("OZGovernorModule", function () {
         params.proposalThreshold,
         params.quorum,
         params.lateQuorumVoteExtension,
-      ])
+      ]
+      const initData = abiCoder.encode(paramTypes, initialValues)
 
-      const initParams = (await ozGovernorModule.populateTransaction.setUp(initData)).data
+      const initParams = (await ozGovernorModule.setUp.populateTransaction(initData)).data
       if (!initParams) {
         throw console.error("error")
       }
 
-      const receipt = await moduleProxyFactory
-        .deployModule(ozGovernorModule.address, initParams, 0)
-        .then((tx: any) => tx.wait())
-
-      // retrieve new address from event
-      const {
-        args: [newProxyAddress],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ModuleProxyCreation")
+      const { address: newProxyAddress } = await deployProxy({
+        mastercopy: await ozGovernorModule.getAddress(),
+        setupArgs: {
+          types: paramTypes,
+          values: initialValues,
+        },
+        saltNonce,
+        provider: eip1193Provider,
+      })
 
       const moduleProxy = await ethers.getContractAt("OZGovernorModule", newProxyAddress)
       expect(moduleProxy.setUp(initParams)).to.be.revertedWith("Initializable: contract is already initialized")
@@ -174,11 +196,11 @@ describe("OZGovernorModule", function () {
   describe("_execute()", function () {
     it("Should execute proposed transaction", async function () {
       const { ozGovernorModule, erc20Token, wallet } = await setup()
-      await erc20Token.transfer(ozGovernorModule.address, 5000)
-      await erc20Token.transferOwnership(ozGovernorModule.address)
-      const calldata = await erc20Token.populateTransaction.transfer(wallet.address, 42).then((tx: any) => tx.data)
+      await erc20Token.transfer(await ozGovernorModule.getAddress(), 5000)
+      await erc20Token.transferOwnership(await ozGovernorModule.getAddress())
+      const calldata = await erc20Token.transfer.populateTransaction(wallet.address, 42).then((tx: any) => tx.data)
       const proposal = {
-        targets: [erc20Token.address],
+        targets: [await erc20Token.getAddress()],
         values: [0],
         calldatas: [calldata],
         description: "A token transfer",
@@ -187,9 +209,21 @@ describe("OZGovernorModule", function () {
       const receipt = await ozGovernorModule
         .propose(proposal.targets, proposal.values, proposal.calldatas, proposal.description)
         .then((tx: any) => tx.wait())
+
+      const parsedLogs = receipt.logs.map((log: any) => {
+        try {
+          return ozGovernorModule.interface.parseLog(log)
+        } catch (error) {
+          return null
+        }
+      })
+
+      const event = parsedLogs.find((log: any) => log && log.name === "ProposalCreated")
+
+      // retrieve new address from event
       const {
         args: [proposalId],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ProposalCreated")
+      } = event
 
       await ozGovernorModule.castVote(proposalId, 1)
 
@@ -201,7 +235,7 @@ describe("OZGovernorModule", function () {
         proposal.targets,
         proposal.values,
         proposal.calldatas,
-        await ethers.utils.solidityKeccak256(["string"], [proposal.description]),
+        ethers.solidityPackedKeccak256(["string"], [proposal.description]),
       )
 
       expect(await erc20Token.balanceOf(wallet.address)).to.equal(895042)
@@ -209,11 +243,11 @@ describe("OZGovernorModule", function () {
 
     it("Should execute batch of proposed transactions", async function () {
       const { ozGovernorModule, erc20Token, wallet } = await setup()
-      await erc20Token.transfer(ozGovernorModule.address, 5000)
-      await erc20Token.transferOwnership(ozGovernorModule.address)
-      const calldata = await erc20Token.populateTransaction.transfer(wallet.address, 42).then((tx: any) => tx.data)
+      await erc20Token.transfer(await ozGovernorModule.getAddress(), 5000)
+      await erc20Token.transferOwnership(await ozGovernorModule.getAddress())
+      const calldata = await erc20Token.transfer.populateTransaction(wallet.address, 42).then((tx: any) => tx.data)
       const proposal = {
-        targets: [erc20Token.address, erc20Token.address],
+        targets: [await erc20Token.getAddress(), await erc20Token.getAddress()],
         values: [0, 0],
         calldatas: [calldata, calldata],
         description: "A couple of token transfers",
@@ -222,9 +256,21 @@ describe("OZGovernorModule", function () {
       const receipt = await ozGovernorModule
         .propose(proposal.targets, proposal.values, proposal.calldatas, proposal.description)
         .then((tx: any) => tx.wait())
+
+      const parsedLogs = receipt.logs.map((log: any) => {
+        try {
+          return ozGovernorModule.interface.parseLog(log)
+        } catch (error) {
+          return null
+        }
+      })
+
+      const event = parsedLogs.find((log: any) => log && log.name === "ProposalCreated")
+
+      // retrieve new address from event
       const {
         args: [proposalId],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ProposalCreated")
+      } = event
 
       await ozGovernorModule.castVote(proposalId, 1)
 
@@ -236,7 +282,7 @@ describe("OZGovernorModule", function () {
         proposal.targets,
         proposal.values,
         proposal.calldatas,
-        await ethers.utils.solidityKeccak256(["string"], [proposal.description]),
+        ethers.solidityPackedKeccak256(["string"], [proposal.description]),
       )
 
       expect(await erc20Token.balanceOf(wallet.address)).to.equal(895084)
@@ -244,11 +290,13 @@ describe("OZGovernorModule", function () {
 
     it("Should revert with TransactionsFailed() if module transactions fail", async function () {
       const { avatar, ozGovernorModule, erc20Token } = await setup()
-      // await erc20Token.transfer(ozGovernorModule.address, 5000)
-      await erc20Token.transferOwnership(ozGovernorModule.address)
-      const calldata = await erc20Token.populateTransaction.mint(avatar.address, 10000).then((tx: any) => tx.data)
+      // await erc20Token.transfer(await ozGovernorModule.getAddress(), 5000)
+      await erc20Token.transferOwnership(await ozGovernorModule.getAddress())
+      const calldata = await erc20Token.mint
+        .populateTransaction(await avatar.getAddress(), 10000)
+        .then((tx: any) => tx.data)
       const proposal = {
-        targets: [erc20Token.address],
+        targets: [await erc20Token.getAddress()],
         values: [0],
         calldatas: [calldata],
         description: "Mint some tokens",
@@ -257,9 +305,21 @@ describe("OZGovernorModule", function () {
       const receipt = await ozGovernorModule
         .propose(proposal.targets, proposal.values, proposal.calldatas, proposal.description)
         .then((tx: any) => tx.wait())
+
+      const parsedLogs = receipt.logs.map((log: any) => {
+        try {
+          return ozGovernorModule.interface.parseLog(log)
+        } catch (error) {
+          return null
+        }
+      })
+
+      const event = parsedLogs.find((log: any) => log && log.name === "ProposalCreated")
+
+      // retrieve new address from event
       const {
         args: [proposalId],
-      } = receipt.events.find(({ event }: { event: string }) => event === "ProposalCreated")
+      } = event
 
       await ozGovernorModule.castVote(proposalId, 1)
 
@@ -272,67 +332,9 @@ describe("OZGovernorModule", function () {
           proposal.targets,
           proposal.values,
           proposal.calldatas,
-          await ethers.utils.solidityKeccak256(["string"], [proposal.description]),
+          ethers.solidityPackedKeccak256(["string"], [proposal.description]),
         ),
-      ).to.be.revertedWith("TransactionsFailed()")
-    })
-  })
-
-  describe("transferOwnership()", function () {
-    it("Should transfer ownership and emit OwnershipTransferred() event", async function () {
-      const { avatar, ozGovernorModule, wallet } = await setup()
-      const tx: PopulatedTransaction = await ozGovernorModule.populateTransaction.transferOwnership(wallet.address)
-      if (!tx.data) {
-        throw new Error("no tx data")
-      }
-      expect(await avatar.exec(ozGovernorModule.address, 0, tx.data))
-        .to.emit(ozGovernorModule, "OwnershipTransferred()")
-        .withArgs(avatar.address)
-    })
-    it("Should revert if caller is not owner", async function () {
-      const { ozGovernorModule, wallet } = await setup()
-      await expect(ozGovernorModule.transferOwnership(wallet.address)).to.be.revertedWith("Governor: onlyGovernance")
-    })
-  })
-
-  describe("setMultisend()", function () {
-    it("Should set the multisend address and emit the MultisendSet() event", async function () {
-      const { avatar, ozGovernorModule } = await setup()
-      const tx: PopulatedTransaction = await ozGovernorModule.populateTransaction.setMultisend(AddressOne)
-      if (!tx.data) {
-        throw new Error("no tx data")
-      }
-      expect(await avatar.exec(ozGovernorModule.address, 0, tx.data))
-        .to.emit(ozGovernorModule, "MultisendSet()")
-        .withArgs(AddressOne)
-    })
-    it("Should revert if caller is not owner", async function () {
-      const { ozGovernorModule } = await setup()
-      await expect(ozGovernorModule.setMultisend(AddressOne)).to.be.revertedWith("Governor: onlyGovernance")
-    })
-  })
-
-  describe("setTarget()", function () {
-    it("Should set the target address and emit the TargetSet() event", async function () {
-      const { avatar, ozGovernorModule } = await setup()
-      const tx: PopulatedTransaction = await ozGovernorModule.populateTransaction.setTarget(AddressOne)
-      if (!tx.data) {
-        throw new Error("no tx data")
-      }
-      expect(await avatar.exec(ozGovernorModule.address, 0, tx.data))
-        .to.emit(ozGovernorModule, "setTarget()")
-        .withArgs(AddressOne)
-    })
-    it("Should revert if caller is not owner", async function () {
-      const { ozGovernorModule } = await setup()
-      await expect(ozGovernorModule.setTarget(AddressOne)).to.be.revertedWith("Governor: onlyGovernance")
-    })
-  })
-
-  describe("version()", function () {
-    it("Should return 'Zodaic OZ Governor Module: v1.0.0'", async function () {
-      const { ozGovernorModule } = await setup()
-      expect(await ozGovernorModule.version()).to.equal("Zodaic OZ Governor Module: v1.0.0")
+      ).to.be.revertedWithCustomError(ozGovernorModule, "TransactionsFailed()")
     })
   })
 })

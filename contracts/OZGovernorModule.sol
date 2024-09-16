@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.9;
 
-import "@gnosis.pm/zodiac/contracts/interfaces/IAvatar.sol";
+import "@gnosis-guild/zodiac-core/contracts/interfaces/IAvatar.sol";
 import "./MultisendEncoder.sol";
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
@@ -18,15 +18,6 @@ contract OZGovernorModule is
     GovernorVotesQuorumFractionUpgradeable,
     GovernorPreventLateQuorumUpgradeable
 {
-    /// @dev Emitted each time the multisend address is set.
-    event MultisendSet(address indexed multisend);
-    /// @dev Emitted each time the Target is set.
-    event TargetSet(address indexed previousTarget, address indexed newTarget);
-    /// @dev Emitted each time ownership is transferred.
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    /// @dev Emitted upon successful setup
-    event OZGovernorModuleSetUp(address indexed owner, address indexed target);
-
     /// @dev Transaction execution failed.
     error TransactionsFailed();
 
@@ -102,12 +93,11 @@ contract OZGovernorModule is
         __GovernorVotes_init(IVotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_quorum);
         __GovernorPreventLateQuorum_init(_initialVoteExtension);
-        emit OZGovernorModuleSetUp(_owner, _target);
     }
 
     /// @dev Execute via a Zodiac avatar, like a Gnosis Safe.
     function _execute(
-        uint256, /* proposalId */
+        uint256 /* proposalId */,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
@@ -125,39 +115,10 @@ contract OZGovernorModule is
         }
     }
 
-    /// @dev Transfers ownership of this contract to a new address.
-    /// @param _owner Address of the account to be set as the new owner.
-    /// @notice Can only be called by `owner`.
-    function transferOwnership(address _owner) public onlyGovernance {
-        emit OwnershipTransferred(owner, _owner);
-        owner = _owner;
-    }
-
-    /// @dev Sets the address of the multisend contract to be used for batched of transactions.
-    /// @param _multisend Address of the multisend contract to be used.
-    /// @notice Can only be called by `owner`.
-    function setMultisend(address _multisend) public onlyGovernance {
-        multisend = _multisend;
-        emit MultisendSet(_multisend);
-    }
-
-    /// @dev Sets the address of the target contract, on which this contract will call `execTransactionFromModule()`.
-    /// @param _target Address of the target contract to be used.
-    /// @notice Can only be called by `owner`.
-    function setTarget(address _target) public onlyGovernance {
-        emit TargetSet(target, _target);
-        target = _target;
-    }
-
     /// @dev Returns `owner`.
     /// @notice This differs slightly from a typical Zodiac mod, where `owner` and `avatar`/`executor` would be distinguished.
     function _executor() internal view override returns (address) {
         return owner;
-    }
-
-    /// @dev Returns this module's version.
-    function version() public pure override returns (string memory) {
-        return "Zodaic OZ Governor Module: v1.0.0";
     }
 
     /// The following functions are overrides required by Solidity.
@@ -175,19 +136,15 @@ contract OZGovernorModule is
         uint256 proposalId,
         address account,
         uint8 support,
-        string memory reason
+        string memory reason,
+        bytes memory params
     ) internal virtual override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable) returns (uint256) {
-        return GovernorPreventLateQuorumUpgradeable._castVote(proposalId, account, support, reason);
+        return GovernorPreventLateQuorumUpgradeable._castVote(proposalId, account, support, reason, params);
     }
 
-    function proposalDeadline(uint256 proposalId)
-        public
-        view
-        virtual
-        override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable)
-        returns (uint256)
-    {
+    function proposalDeadline(
+        uint256 proposalId
+    ) public view virtual override(GovernorPreventLateQuorumUpgradeable, GovernorUpgradeable) returns (uint256) {
         return GovernorPreventLateQuorumUpgradeable.proposalDeadline(proposalId);
     }
-
 }
