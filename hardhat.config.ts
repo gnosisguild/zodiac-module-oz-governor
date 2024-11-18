@@ -1,6 +1,9 @@
 import "@nomicfoundation/hardhat-toolbox"
 import "@nomicfoundation/hardhat-verify"
 import "@nomicfoundation/hardhat-ethers"
+import "@matterlabs/hardhat-zksync-solc"
+import "@matterlabs/hardhat-zksync-deploy"
+import "@matterlabs/hardhat-zksync-verify"
 import "hardhat-contract-sizer"
 import "hardhat-gas-reporter"
 import "solidity-coverage"
@@ -43,6 +46,21 @@ const config = {
       viaIR: true,
     },
   },
+  zksolc: {
+    version: "1.5.7",
+    compilerSource: "binary",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 10000,
+      },
+        libraries: {
+              "contracts/MultisendEncoder.sol": {
+                "MultisendEncoder": "0x8D29A928a8932EbcC07D1Cd11409A966584A0467"
+              }
+            }
+    },
+  },
   sourcify: {
     enabled: true,
   },
@@ -65,6 +83,20 @@ const config = {
       url: `https://sepolia.infura.io/v3/${process.env.INFURA_KEY}`,
       tags: ["moduleMastercopy"],
     },
+    zkSyncMainnet: {
+      url: "https://mainnet.era.zksync.io",
+      ethNetwork: "mainnet",
+      zksync: true,
+      accounts: sharedNetworkConfig.accounts,
+      verifyURL: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
+    },
+    zkSyncSepoliaTestnet: {
+      url: "https://sepolia.era.zksync.dev",
+      ethNetwork: "sepolia",
+      zksync: true,
+      verifyURL: "https://explorer.sepolia.era.zksync.dev/contract_verification",
+      accounts: sharedNetworkConfig.accounts,
+    },
   },
 
   namedAccounts: {
@@ -77,7 +109,7 @@ const config = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.ETHERSCAN_API_KEY ?? process.env.ZKSYNC_EXPLORER_API_KEY,
   },
 }
 
