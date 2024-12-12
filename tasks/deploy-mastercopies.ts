@@ -1,6 +1,5 @@
 import { task } from "hardhat/config"
-
-import { readMastercopies, deployMastercopy } from "@gnosis-guild/zodiac-core"
+import { deployMastercopy, readMastercopies } from "@gnosis-guild/zodiac-core"
 import { createEIP1193 } from "./create-EIP1193"
 
 task(
@@ -22,6 +21,7 @@ task(
         console.log(`⏳ ${contractName}@${contractVersion}: Deployment starting...`)
       },
     })
+
     if (noop) {
       console.log(`🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`)
     } else {

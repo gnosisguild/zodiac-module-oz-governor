@@ -12,6 +12,10 @@ cache
 artifacts
 deployments
 
+cache-zk
+artifacts-zk
+deployments-zk
+
 typechain-types
 yarn-error.log
 .DS_Store
