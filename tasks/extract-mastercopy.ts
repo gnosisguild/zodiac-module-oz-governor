@@ -49,6 +49,18 @@ task("extract:mastercopy", "Extracts and persists current mastercopy build artif
     sourceName: "contracts/OZGovernorModule.sol",
   })
 
+  // address _owner,
+  // address _target,
+  // address _multisend,
+  // address _token,
+  // string memory _name,
+  // uint256 _votingDelay,
+  // uint256 _votingPeriod,
+
+  // uint256 _proposalThreshold,
+  // uint256 _quorum,
+  // uint64 _initialVoteExtension
+  console.log("HELLO  " + erc20VotesAddress)
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
     contractName: "OZGovernorModule",
@@ -68,7 +80,7 @@ task("extract:mastercopy", "Extracts and persists current mastercopy build artif
         "uint256",
         "uint64",
       ],
-      values: [AddressOne, AddressOne, AddressOne, erc20VotesAddress, "", 0, 100, 0, 0, 0],
+      values: [AddressOne, AddressOne, AddressOne, erc20VotesAddress, "", 0, 100, 0, 10, 0],
     },
     salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
   })
