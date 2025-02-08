@@ -65,6 +65,12 @@ const config = {
       url: `https://sepolia.infura.io/v3/${process.env.INFURA_KEY}`,
       tags: ["moduleMastercopy"],
     },
+    "lisk-sepolia": {
+      ...sharedNetworkConfig,
+      chainId: 4202,
+      url: "https://rpc.sepolia-api.lisk.com",
+      gasPrice: 1000000000,
+    },
   },
 
   namedAccounts: {
@@ -77,7 +83,23 @@ const config = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      sepolia: process.env.ETHERSCAN_API_KEY,
+      gnosis: process.env.GNOSISSCAN_API_KEY,
+      matic: process.env.POLYGONSCAN_API_KEY,
+      "lisk-sepolia": process.env.ETHERSCAN_API_KEY,
+    },
+    customChains: [
+      {
+        network: "lisk-sepolia",
+        chainId: 4202,
+        urls: {
+          apiURL: "https://sepolia-blockscout.lisk.com/api",
+          browserURL: "https://sepolia-blockscout.lisk.com",
+        },
+      },
+    ],
   },
 }
 
