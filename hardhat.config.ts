@@ -71,6 +71,12 @@ const config = {
       url: "https://rpc.sepolia-api.lisk.com",
       gasPrice: 1000000000,
     },
+    "bob-sepolia": {
+      ...sharedNetworkConfig,
+      chainId: 808813,
+      url: "https://bob-sepolia.rpc.gobob.xyz/",
+      gasPrice: 1000000000,
+    },
   },
 
   namedAccounts: {
@@ -97,6 +103,14 @@ const config = {
         urls: {
           apiURL: "https://sepolia-blockscout.lisk.com/api",
           browserURL: "https://sepolia-blockscout.lisk.com",
+        },
+      },
+      {
+        network: "bob-sepolia",
+        chainId: 808813,
+        urls: {
+          apiURL: "https://bob-sepolia.explorer.gobob.xyz/api",
+          browserURL: "https://bob-sepolia.explorer.gobob.xyz",
         },
       },
     ],
